@@ -33,9 +33,9 @@ public class SeiTchizServer {
 				}
 				
 				if(user.length() != 0 && passwd.length() != 0) {
-					outStream.writeObject(new Boolean(true));
+					outStream.writeObject(true);
 				} else {
-					outStream.writeObject(new Boolean(false));
+					outStream.writeObject(false);
 				}
 				
 				outStream.close();
@@ -56,6 +56,7 @@ public class SeiTchizServer {
 		server.startServer(Integer.parseInt(args[0]));
 	}
 
+	@SuppressWarnings("resource")
 	private void startServer(int port) {
 		ServerSocket sSoc = null;
 		try {

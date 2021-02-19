@@ -20,6 +20,7 @@ public class SeiTchiz {
 				Scanner sc = new Scanner(System.in);
 				System.out.println("Insira a sua password: ");
 				pw = sc.nextLine();
+				sc.close();
 			} else {
 				pw = args[2];
 			}
@@ -34,6 +35,7 @@ public class SeiTchiz {
 			} else {
 				System.out.println("OTPD4");
 			}
+			
 		} catch (NumberFormatException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
