@@ -1,3 +1,0 @@
-# SC
-
-Projeto de Segurança
