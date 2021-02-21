@@ -1,14 +1,17 @@
 package server;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Scanner;
 
 public class SeiTchizServer {
 
@@ -69,6 +72,18 @@ public class SeiTchizServer {
 			list.add(passwd);
 			list.add(nome);
 			users.put(user, list);
+			PrintWriter pw = new PrintWriter(FILE);
+			for(String s : users.keySet()) {
+				ArrayList<String> lista = users.get(s);
+				for (int i = 0; i < lista.size(); i++) {
+					pw.print(lista.get(i));
+					if(i + 1 < lista.size()) {
+						pw.print(":");
+					}
+				}
+				pw.println();
+			}
+			pw.close();
 		}
 	}
 
@@ -82,6 +97,7 @@ public class SeiTchizServer {
 	private void startServer(int port) {
 		ServerSocket sSoc = null;
 		try {
+			loadUsers();
 			sSoc = new ServerSocket(port);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -97,5 +113,20 @@ public class SeiTchizServer {
 			}
 		}
 		//sSoc.close();
+	}
+
+	private void loadUsers() throws FileNotFoundException {
+		Scanner sc = new Scanner(new File(FILE));
+		while(sc.hasNextLine()) {
+			String line = sc.nextLine();
+			String[] credencias = line.split(":");
+			ArrayList<String> list = new ArrayList<>();
+			list.add(credencias[0]);
+			list.add(credencias[1]);
+			list.add(credencias[2]);
+			users.put(credencias[0], list);
+		}
+		
+		sc.close();
 	}
 }
