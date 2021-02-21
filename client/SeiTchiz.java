@@ -47,8 +47,23 @@ public class SeiTchiz {
 			String line = null;
 			do {
 				System.out.println("Escolha uma opção: ");
+				System.out.println("follow");
+				System.out.println("unfollow");
+				System.out.println("viewfollowers");
+				System.out.println("post");
+				System.out.println("wall");
+				System.out.println("like");
+				System.out.println("newgroup");
+				System.out.println("addu");
+				System.out.println("removeu");
+				System.out.println("ginfo");
+				System.out.println("msg");
+				System.out.println("collect");
+				System.out.println("history");
+				System.out.println("quit");
 				line = sc.nextLine();
-			} while(line.equals("quit"));
+				outStream.writeObject(line);
+			} while(!line.equals("quit"));
 			
 			socket.close();
 			sc.close();
