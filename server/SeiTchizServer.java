@@ -68,12 +68,12 @@ public class SeiTchizServer {
 				}
 			}
 			ArrayList<String> list = new ArrayList<>();
-			list.add(user);
 			list.add(passwd);
 			list.add(nome);
 			users.put(user, list);
 			PrintWriter pw = new PrintWriter(FILE);
 			for(String s : users.keySet()) {
+				pw.print(s + ":");
 				ArrayList<String> lista = users.get(s);
 				for (int i = 0; i < lista.size(); i++) {
 					pw.print(lista.get(i));
@@ -123,7 +123,6 @@ public class SeiTchizServer {
 			ArrayList<String> list = new ArrayList<>();
 			list.add(credencias[0]);
 			list.add(credencias[1]);
-			list.add(credencias[2]);
 			users.put(credencias[0], list);
 		}
 		
