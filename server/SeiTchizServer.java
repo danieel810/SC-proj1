@@ -107,6 +107,7 @@ public class SeiTchizServer {
 			}
 
 		}
+		@SuppressWarnings("resource")
 		private void registaUser(String user, String passwd, String nome) throws FileNotFoundException {
 			ArrayList<String> list = new ArrayList<>();
 			list.add(nome);
@@ -124,6 +125,12 @@ public class SeiTchizServer {
 				}
 				pw.println();
 			}
+			pw = new PrintWriter(user + ".txt");
+			pw.println("User:" + user);
+			pw.println("Seguidores:");
+			pw.println("Seguindo:");
+			pw.println("Fotos:");
+			pw.println("Grupos:");
 			pw.close();
 		}
 	}
