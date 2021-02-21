@@ -52,6 +52,36 @@ public class SeiTchizServer {
 					String nome = (String) inStream.readObject();
 					registaUser(user, passwd, nome);
 				}
+				
+				switch((String) inStream.readObject()) {
+					case "f" or "follow":
+						break;
+					case "u" or "unfollow":
+						break;
+					case "v" or "viewfollowers":
+						break;
+					case "p" or "post":
+						break;
+					case "w" or "wall":
+						break;
+					case "l" or "like":
+						break;
+					case "n" or "newgroup":
+						break;
+					case "a" or "addu":
+						break;
+					case "r" or "removeu":
+						break;
+					case "g" or "ginfo":
+						break;
+					case "m" or "msg":
+						break;
+					case "c" or "collect":
+						break;
+					case "h" or "history":
+						break;
+					
+				}
 
 				outStream.close();
 				inStream.close();
