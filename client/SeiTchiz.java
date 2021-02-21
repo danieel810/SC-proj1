@@ -43,7 +43,12 @@ public class SeiTchiz {
 				String nome = sc.nextLine();
 				outStream.writeObject(nome);
 				break;
-			} 
+			}
+			String line = null;
+			do {
+				System.out.println("Escolha uma opção: ");
+				line = sc.nextLine();
+			} while(line.equals("quit"));
 			
 			socket.close();
 			sc.close();
