@@ -52,35 +52,48 @@ public class SeiTchizServer {
 					String nome = (String) inStream.readObject();
 					registaUser(user, passwd, nome);
 				}
-				
+
 				switch((String) inStream.readObject()) {
-					case "f" or "follow":
-						break;
-					case "u" or "unfollow":
-						break;
-					case "v" or "viewfollowers":
-						break;
-					case "p" or "post":
-						break;
-					case "w" or "wall":
-						break;
-					case "l" or "like":
-						break;
-					case "n" or "newgroup":
-						break;
-					case "a" or "addu":
-						break;
-					case "r" or "removeu":
-						break;
-					case "g" or "ginfo":
-						break;
-					case "m" or "msg":
-						break;
-					case "c" or "collect":
-						break;
-					case "h" or "history":
-						break;
-					
+				case "f":
+				case "follow":
+					break;
+				case "u":
+				case "unfollow":
+					break;
+				case "v":
+				case "viewfollowers":
+					break;
+				case "p":
+				case "post":
+					break;
+				case "w":
+				case "wall":
+					break;
+				case "l":
+				case "like":
+					break;
+				case "n":
+				case "newgroup":
+					break;
+				case "a":
+				case "addu":
+					break;
+				case "r":
+				case "removeu":
+					break;
+				case "g":
+				case "ginfo":
+					break;
+				case "m":
+				case "msg":
+					break;
+				case "c":
+				case "collect":
+					break;
+				case "h":
+				case "history":
+					break;
+
 				}
 
 				outStream.close();
@@ -153,7 +166,7 @@ public class SeiTchizServer {
 			list.add(credencias[1]);
 			users.put(credencias[0], list);
 		}
-		
+
 		sc.close();
 	}
 }
