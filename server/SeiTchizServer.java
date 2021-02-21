@@ -10,7 +10,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Scanner;
 
 public class SeiTchizServer {
@@ -39,9 +38,16 @@ public class SeiTchizServer {
 				System.out.println("thread: depois de receber a password e o user");
 
 				if(users.get(user) != null) {
-					outStream.writeObject(true);
-				} else {
-					outStream.writeObject(false);
+					String pw = users.get(user).get(1); // Tudo deu certo;
+					if(pw.equals(passwd)) {
+						outStream.writeObject(1);
+					} else {
+						outStream.writeObject(2); // User existe mas a pw não é aquela
+						System.out.println("Password errada");
+						return;
+					}
+				} else { // User ainda não existe
+					outStream.writeObject(3);
 					outStream.writeObject("Insira o seu nome");
 					String nome = (String) inStream.readObject();
 					registaUser(user, passwd, nome);
@@ -58,18 +64,10 @@ public class SeiTchizServer {
 			}
 
 		}
-
 		private void registaUser(String user, String passwd, String nome) throws FileNotFoundException {
-			for(String u : users.keySet()) {
-				ArrayList<String> t = users.get(u);
-				Iterator<String> y = t.iterator();
-				while(y.hasNext()) {
-					System.out.println(y.next());
-				}
-			}
 			ArrayList<String> list = new ArrayList<>();
-			list.add(passwd);
 			list.add(nome);
+			list.add(passwd);
 			users.put(user, list);
 			PrintWriter pw = new PrintWriter(FILE);
 			for(String s : users.keySet()) {

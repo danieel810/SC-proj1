@@ -28,28 +28,31 @@ public class SeiTchiz {
 			outStream.writeObject(id);
 			outStream.writeObject(pw);
 			ObjectInputStream inStream = new ObjectInputStream(socket.getInputStream());
-			boolean b = (Boolean) inStream.readObject();
-			if (b) {
-				System.out.println("ATMD4");
-			} else {
+			int b = (int) inStream.readObject();
+			switch (b) {
+			case 1:
+				
+				break;
+			case 2:
+				
+				break;
+
+			case 3:
 				String sss = (String)inStream.readObject();
 				System.out.println(sss);
 				String nome = sc.nextLine();
 				outStream.writeObject(nome);
-			}
+				break;
+			} 
+			
 			socket.close();
 			sc.close();
-		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
