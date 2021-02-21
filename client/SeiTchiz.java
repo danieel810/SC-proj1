@@ -13,14 +13,13 @@ public class SeiTchiz {
 		Socket socket = null;
 		String s = args[0];
 		String[] ss = s.split(":");
+		Scanner sc = new Scanner(System.in);
 		try {
 			socket = new Socket(ss[0], Integer.parseInt(ss[1]));
 			String pw = null;
 			if (args.length == 2)  {
-				Scanner sc = new Scanner(System.in);
 				System.out.println("Insira a sua password: ");
 				pw = sc.nextLine();
-				sc.close();
 			} else {
 				pw = args[2];
 			}
@@ -33,9 +32,13 @@ public class SeiTchiz {
 			if (b) {
 				System.out.println("ATMD4");
 			} else {
-				System.out.println("OTPD4");
+				String sss = (String)inStream.readObject();
+				System.out.println(sss);
+				String nome = sc.nextLine();
+				outStream.writeObject(nome);
 			}
-			
+			socket.close();
+			sc.close();
 		} catch (NumberFormatException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
