@@ -39,6 +39,7 @@ public class SeiTchizServer {
 
 				if(users.get(user) != null) {
 					String pw = users.get(user).get(1); // Tudo deu certo;
+					System.out.println(pw);
 					if(pw.equals(passwd)) {
 						outStream.writeObject(1);
 					} else {
@@ -52,10 +53,13 @@ public class SeiTchizServer {
 					String nome = (String) inStream.readObject();
 					registaUser(user, passwd, nome);
 				}
-
-				switch((String) inStream.readObject()) {
+				String[] line = ((String) inStream.readObject()).split(" ");
+				 
+				switch(line[0]) {
 				case "f":
 				case "follow":
+					System.out.println("Entrou no follow");
+					follow(user, line[1]);
 					break;
 				case "u":
 				case "unfollow":
@@ -93,13 +97,18 @@ public class SeiTchizServer {
 				case "h":
 				case "history":
 					break;
-
+				default:
+					System.out.println("Entrou no default");
+					//Avisar que o cliente foi mongo
+					break;
 				}
 
 				outStream.close();
 				inStream.close();
 				socket.close();
 
+			} catch (ArrayIndexOutOfBoundsException e) {
+				// Avisar que o stor é mongo
 			} catch(IOException e) {
 				e.printStackTrace();				
 			} catch (ClassNotFoundException e1) {
@@ -107,7 +116,38 @@ public class SeiTchizServer {
 			}
 
 		}
-		@SuppressWarnings("resource")
+
+		private void follow(String user, String userASeguir) {
+			if(users.get(userASeguir) != null) {
+				System.out.println("Entrou no if");
+				try {
+					Scanner userASeguirSC = new Scanner(new File(userASeguir + ".txt"));
+					StringBuilder bob = new StringBuilder();
+					while(userASeguirSC.hasNextLine()) {
+						String line = userASeguirSC.nextLine();						
+						String[] sp = line.split(":");
+						
+						if(sp[0].equals("Seguidores")) {
+							sp[1] = sp[1] + user + ",";
+							bob.append(sp[0] + ":");
+							bob.append(sp[1] + "\n");
+						} else {
+							bob.append(line + "\n");
+						}
+					}
+					System.out.println(bob.toString());
+					userASeguirSC.close();
+					
+					PrintWriter pw = new PrintWriter(userASeguir + ".txt");
+					pw.println(bob.toString());
+					pw.close();
+					
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
 		private void registaUser(String user, String passwd, String nome) throws FileNotFoundException {
 			ArrayList<String> list = new ArrayList<>();
 			list.add(nome);
@@ -125,13 +165,15 @@ public class SeiTchizServer {
 				}
 				pw.println();
 			}
-			pw = new PrintWriter(user + ".txt");
-			pw.println("User:" + user);
-			pw.println("Seguidores:");
-			pw.println("Seguindo:");
-			pw.println("Fotos:");
-			pw.println("Grupos:");
 			pw.close();
+			PrintWriter t = new PrintWriter(user + ".txt");
+			t.println("User:" + user);
+			t.println("Seguidores: ");
+			t.println("Seguindo: ");
+			t.println("Fotos: ");
+			t.println("Grupos: ");
+			t.println("Owner: ");
+			t.close();
 		}
 	}
 
@@ -167,10 +209,11 @@ public class SeiTchizServer {
 		Scanner sc = new Scanner(new File(FILE));
 		while(sc.hasNextLine()) {
 			String line = sc.nextLine();
+			// user:nome:pw
 			String[] credencias = line.split(":");
 			ArrayList<String> list = new ArrayList<>();
-			list.add(credencias[0]);
 			list.add(credencias[1]);
+			list.add(credencias[2]);
 			users.put(credencias[0], list);
 		}
 
