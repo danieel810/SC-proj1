@@ -63,6 +63,8 @@ public class SeiTchiz {
 				System.out.println("quit");
 				line = sc.nextLine();
 				outStream.writeObject(line);
+				String ssss = (String) inStream.readObject();
+				System.out.println(ssss);
 			} while(!line.equals("quit"));
 			
 			socket.close();

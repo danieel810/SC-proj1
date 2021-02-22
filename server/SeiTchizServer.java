@@ -61,16 +61,20 @@ public class SeiTchizServer {
 					case "follow":
 						System.out.println("Entrou no follow");
 						follow(user, line[1]);
+						outStream.writeObject("followed");
 						break;
 					case "u":
 					case "unfollow":
 						unfollow(user, line[1]);
+						outStream.writeObject("unfollowed");
 						break;
 					case "v":
 					case "viewfollowers":
+						outStream.writeObject(viewFollowers(user));
 						break;
 					case "p":
 					case "post":
+						post(user, line[1]);
 						break;
 					case "w":
 					case "wall":
@@ -103,6 +107,7 @@ public class SeiTchizServer {
 						System.out.println("Entrou no default");
 						//Avisar que o cliente foi mongo
 						b = false;
+						outStream.writeObject("saiu");
 						break;
 					}	
 				}
@@ -119,6 +124,28 @@ public class SeiTchizServer {
 				e1.printStackTrace();
 			}
 
+		}
+		
+		private String viewFollowers(String user) throws FileNotFoundException{
+            Scanner sc = new Scanner(new File(user+ ".txt"));
+            while(sc.hasNextLine()) {
+                String line = sc.nextLine();
+                String[] sp = line.split(":");
+                if(sp[0].equals("Seguidores")) {
+                	sc.close();
+                	if(sp.length > 1) {
+                		return sp[1].substring(0, sp[1].length() - 1);
+                	} else {
+                		return "Não tem followers";
+                	}
+                }
+            }
+            sc.close();
+            return "erro";
+        }
+
+		private void post(String user, String path) {
+			
 		}
 
 		private void unfollow(String user, String userASeguir) {
@@ -178,15 +205,11 @@ public class SeiTchizServer {
 					} else {
 						line = aux[0];
 					}
-                    
-                    //line = line.substring(0, line.indexOf(info+",")) + line.substring(line.indexOf(info+",") + info.length() + 1, line.length());
                 } 
                 pt.println(line);
             }
-
 			doc.delete();
             temp.renameTo(doc);
-			temp.delete();
 			sc.close();
             pt.close();
         }
@@ -206,7 +229,6 @@ public class SeiTchizServer {
             }
 			doc.delete();
 			temp.renameTo(doc);
-			temp.delete();
             sc.close();
             pt.close();
         }
