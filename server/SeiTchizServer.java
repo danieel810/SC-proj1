@@ -64,7 +64,7 @@ public class SeiTchizServer {
 						break;
 					case "u":
 					case "unfollow":
-						
+						unfollow(user, line[1]);
 						break;
 					case "v":
 					case "viewfollowers":
@@ -121,21 +121,46 @@ public class SeiTchizServer {
 
 		}
 
-		private void follow(String user, String userASeguir) {
+		private void unfollow(String user, String userASeguir) {
 			if(users.get(userASeguir) != null) {
-				System.out.println("Entrou no if");
 				try {
-					addToDoc(userASeguir, "Seguidores", user);
-
-					addToDoc(user, "Seguindo", userASeguir);
+					removeFromDoc(userASeguir, "Seguidores", user);
+					
+					removeFromDoc(user, "Seguindo", userASeguir);
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				}
 			}
 		}
 
-		private boolean jaSegue(String seguidores, String user) {
-			return seguidores.contains(user + ","); // A VIRGULA PORQUE OS GAH MESMO BURROS E YA
+		private void follow(String user, String userASeguir) {
+			if(users.get(userASeguir) != null) {
+				try {
+					if(!seguir(user, userASeguir)) {
+						addToDoc(userASeguir, "Seguidores", user);
+
+						addToDoc(user, "Seguindo", userASeguir);
+					}
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		private boolean seguir(String user, String userASeguir) throws FileNotFoundException {
+			Scanner sc = new Scanner(new File(userASeguir + ".txt"));
+			while(sc.hasNextLine()) {
+				String line = sc.nextLine();
+				String[] sp = line.split(":");
+				if(sp[0].equals("Seguidores")) {
+					if(sp.length > 1) {
+						sc.close();
+						return sp[1].contains(user + ",");
+					}
+				}
+			}
+			sc.close();
+			return false;
 		}
 
 		private void removeFromDoc (String docName, String tag, String info) throws FileNotFoundException{
@@ -147,7 +172,14 @@ public class SeiTchizServer {
                 String line = sc.nextLine();
                 String[] sp = line.split(":");
                 if(sp[0].equals(tag)) {
-                    line = line.substring(0, line.indexOf(info+",")) + line.substring(line.indexOf(info+",") + info.length() + 1, line.length());
+					String[] aux = line.split(info + ",");
+					if(aux.length > 1) {
+						line = aux[0] + aux[1];
+					} else {
+						line = aux[0];
+					}
+                    
+                    //line = line.substring(0, line.indexOf(info+",")) + line.substring(line.indexOf(info+",") + info.length() + 1, line.length());
                 } 
                 pt.println(line);
             }
@@ -167,9 +199,7 @@ public class SeiTchizServer {
                 String line = sc.nextLine();
                 String[] sp = line.split(":");
                 if(sp[0].equals(tag)) {
-					//if(!jaSegue(line, info)){
 					line = line + (info + ",");
-					//} 
                 } 
                 pt.println(line);
             }
