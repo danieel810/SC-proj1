@@ -186,6 +186,7 @@ public class SeiTchizServer {
 
 			doc.delete();
             temp.renameTo(doc);
+			temp.delete();
 			sc.close();
             pt.close();
         }
@@ -205,6 +206,7 @@ public class SeiTchizServer {
             }
 			doc.delete();
 			temp.renameTo(doc);
+			temp.delete();
             sc.close();
             pt.close();
         }
