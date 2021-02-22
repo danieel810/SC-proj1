@@ -142,6 +142,13 @@ public class SeiTchizServer {
 					pw.println(bob.toString());
 					pw.close();
 					
+					Scanner eu = new Scanner(new File(user + ".txt"));
+					bob = new StringBuilder();
+					while(eu.hasNextLine()) {
+						String line = eu.nextLine();
+						String[] sp = line.split(":");
+					}
+					
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				}
