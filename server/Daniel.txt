@@ -1,7 +1,6 @@
 User:Daniel
-Seguidores: Ricardo,
-Seguindo: 
-Fotos: 
-Grupos: 
-Owner: 
-
+Seguidores:
+Seguindo:Ricardo,
+Fotos:
+Grupos:
+Owner:

@@ -53,54 +53,58 @@ public class SeiTchizServer {
 					String nome = (String) inStream.readObject();
 					registaUser(user, passwd, nome);
 				}
-				String[] line = ((String) inStream.readObject()).split(" ");
-				 
-				switch(line[0]) {
-				case "f":
-				case "follow":
-					System.out.println("Entrou no follow");
-					follow(user, line[1]);
-					break;
-				case "u":
-				case "unfollow":
-					break;
-				case "v":
-				case "viewfollowers":
-					break;
-				case "p":
-				case "post":
-					break;
-				case "w":
-				case "wall":
-					break;
-				case "l":
-				case "like":
-					break;
-				case "n":
-				case "newgroup":
-					break;
-				case "a":
-				case "addu":
-					break;
-				case "r":
-				case "removeu":
-					break;
-				case "g":
-				case "ginfo":
-					break;
-				case "m":
-				case "msg":
-					break;
-				case "c":
-				case "collect":
-					break;
-				case "h":
-				case "history":
-					break;
-				default:
-					System.out.println("Entrou no default");
-					//Avisar que o cliente foi mongo
-					break;
+				boolean b = true;
+				while(b) {
+					String[] line = ((String) inStream.readObject()).split(" ");
+					switch(line[0]) {
+					case "f":
+					case "follow":
+						System.out.println("Entrou no follow");
+						follow(user, line[1]);
+						break;
+					case "u":
+					case "unfollow":
+						
+						break;
+					case "v":
+					case "viewfollowers":
+						break;
+					case "p":
+					case "post":
+						break;
+					case "w":
+					case "wall":
+						break;
+					case "l":
+					case "like":
+						break;
+					case "n":
+					case "newgroup":
+						break;
+					case "a":
+					case "addu":
+						break;
+					case "r":
+					case "removeu":
+						break;
+					case "g":
+					case "ginfo":
+						break;
+					case "m":
+					case "msg":
+						break;
+					case "c":
+					case "collect":
+						break;
+					case "h":
+					case "history":
+						break;
+					default:
+						System.out.println("Entrou no default");
+						//Avisar que o cliente foi mongo
+						b = false;
+						break;
+					}	
 				}
 
 				outStream.close();
@@ -121,39 +125,59 @@ public class SeiTchizServer {
 			if(users.get(userASeguir) != null) {
 				System.out.println("Entrou no if");
 				try {
-					Scanner userASeguirSC = new Scanner(new File(userASeguir + ".txt"));
-					StringBuilder bob = new StringBuilder();
-					while(userASeguirSC.hasNextLine()) {
-						String line = userASeguirSC.nextLine();						
-						String[] sp = line.split(":");
-						
-						if(sp[0].equals("Seguidores")) {
-							sp[1] = sp[1] + user + ",";
-							bob.append(sp[0] + ":");
-							bob.append(sp[1] + "\n");
-						} else {
-							bob.append(line + "\n");
-						}
-					}
-					System.out.println(bob.toString());
-					userASeguirSC.close();
-					
-					PrintWriter pw = new PrintWriter(userASeguir + ".txt");
-					pw.println(bob.toString());
-					pw.close();
-					
-					Scanner eu = new Scanner(new File(user + ".txt"));
-					bob = new StringBuilder();
-					while(eu.hasNextLine()) {
-						String line = eu.nextLine();
-						String[] sp = line.split(":");
-					}
-					
+					addToDoc(userASeguir, "Seguidores", user);
+
+					addToDoc(user, "Seguindo", userASeguir);
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				}
 			}
 		}
+
+		private boolean jaSegue(String seguidores, String user) {
+			return seguidores.contains(user + ","); // A VIRGULA PORQUE OS GAH MESMO BURROS E YA
+		}
+
+		private void removeFromDoc (String docName, String tag, String info) throws FileNotFoundException{
+            File doc = new File(docName + ".txt");
+            File temp = new File("temp.txt");
+            Scanner sc = new Scanner (doc);
+            PrintWriter pt = new PrintWriter (temp);
+            while(sc.hasNextLine()){
+                String line = sc.nextLine();
+                String[] sp = line.split(":");
+                if(sp[0].equals(tag)) {
+                    line = line.substring(0, line.indexOf(info+",")) + line.substring(line.indexOf(info+",") + info.length() + 1, line.length());
+                } 
+                pt.println(line);
+            }
+
+			doc.delete();
+            temp.renameTo(doc);
+			sc.close();
+            pt.close();
+        }
+		
+		private void addToDoc (String docName, String tag, String info) throws FileNotFoundException{
+            File doc = new File(docName + ".txt");
+            File temp = new File("temp.txt");
+            Scanner sc = new Scanner (doc);
+            PrintWriter pt = new PrintWriter (temp);
+            while(sc.hasNextLine()){
+                String line = sc.nextLine();
+                String[] sp = line.split(":");
+                if(sp[0].equals(tag)) {
+					//if(!jaSegue(line, info)){
+					line = line + (info + ",");
+					//} 
+                } 
+                pt.println(line);
+            }
+			doc.delete();
+			temp.renameTo(doc);
+            sc.close();
+            pt.close();
+        }
 
 		private void registaUser(String user, String passwd, String nome) throws FileNotFoundException {
 			ArrayList<String> list = new ArrayList<>();
@@ -175,11 +199,11 @@ public class SeiTchizServer {
 			pw.close();
 			PrintWriter t = new PrintWriter(user + ".txt");
 			t.println("User:" + user);
-			t.println("Seguidores: ");
-			t.println("Seguindo: ");
-			t.println("Fotos: ");
-			t.println("Grupos: ");
-			t.println("Owner: ");
+			t.println("Seguidores:");
+			t.println("Seguindo:");
+			t.println("Fotos:");
+			t.println("Grupos:");
+			t.println("Owner:");
 			t.close();
 		}
 	}
