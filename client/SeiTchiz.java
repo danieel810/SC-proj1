@@ -1,13 +1,17 @@
 package client;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
 public class SeiTchiz {
+
+	private static final int MEGABYTE = 1024;
 
 	public static void main(String[] args) {
 		Socket socket = null;
@@ -63,8 +67,39 @@ public class SeiTchiz {
 				System.out.println("quit");
 				line = sc.nextLine();
 				outStream.writeObject(line);
-				String ssss = (String) inStream.readObject();
-				System.out.println(ssss);
+				String[] t = line.split("\\s+");
+				if(t[0].equals("wall") || t[0].equals("w")){
+					System.out.println("Entra no wall");
+					wall();
+					System.out.println("Saiu do wall");
+					boolean bb = true;
+					int count = 0;
+					while(bb){
+						count++;
+						System.out.println("Contador: " + count);
+						bb = (boolean) inStream.readObject();
+						System.out.println("Boolean: " + bb);
+						if(bb){
+							String name = (String) inStream.readObject();
+							System.out.println("Name: " + name);
+							int filesize = (int) inStream.readObject();
+							System.out.println("Filesize: " + filesize);
+							OutputStream os = new FileOutputStream(name);
+							byte[] buffer = new byte[MEGABYTE];
+							int read = 0;
+							int remaining = filesize;
+							while((read = inStream.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
+								System.out.println("Remaining: " + remaining);
+								remaining -= read;
+								os.write(buffer, 0, read);
+							}
+							os.close();
+						}	
+					}	
+				} else {
+					String ssss = (String) inStream.readObject();
+					System.out.println(ssss);
+				}
 			} while(!line.equals("quit"));
 			
 			socket.close();

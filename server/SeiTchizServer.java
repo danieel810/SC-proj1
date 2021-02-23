@@ -13,7 +13,9 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 
 public class SeiTchizServer {
@@ -25,6 +27,8 @@ public class SeiTchizServer {
 
 		private final int MEGABYTE = 1024;
 		private Socket socket = null;
+		private ObjectOutputStream outStream = null;
+		private ObjectInputStream inStream = null;
 
 		ServerThread(Socket inSoc) {
 			socket = inSoc;
@@ -32,8 +36,8 @@ public class SeiTchizServer {
 
 		public void run() {
 			try {
-				ObjectOutputStream outStream = new ObjectOutputStream(socket.getOutputStream());
-				ObjectInputStream inStream = new ObjectInputStream(socket.getInputStream());
+				outStream = new ObjectOutputStream(socket.getOutputStream());
+				inStream = new ObjectInputStream(socket.getInputStream());
 
 				String user = null;
 				String passwd = null;
@@ -84,6 +88,8 @@ public class SeiTchizServer {
 						break;
 					case "w":
 					case "wall":
+						System.out.println("Entra no wall");
+						wall(user, Integer.parseInt(line[1]));
 						break;
 					case "l":
 					case "like":
@@ -135,6 +141,59 @@ public class SeiTchizServer {
 
 		}
 
+		private void wall(String user, int nfotos) throws IOException {
+			System.out.println("Entra no wall");
+			List<String> seguindo = Arrays.asList(getFromDoc(user, "Seguindo").split(","));
+			Scanner fotos = new Scanner(new File("Fotos.txt"));
+			while(fotos.hasNextLine()) {
+				System.out.println("Entra no while");
+				String[] t = fotos.nextLine().split(":");
+				if(seguindo.contains(t[0]) && nfotos > 0) {
+					System.out.println("Descobre um gah");
+					outStream.writeObject(nfotos > 0);
+					nfotos--;
+					sendPhoto(t[0], t[1]);
+				}
+			}
+			outStream.writeObject(false);
+			System.out.println("Saiu do wall");
+			fotos.close();
+		}
+
+		private void sendPhoto(String user, String photo) throws IOException {
+			System.out.println("Entra no sendPhoto");
+			System.out.println(photo);
+			File file = new File(user + ";" + photo);
+			InputStream is = new FileInputStream(file);
+			byte[] buffer = new byte[MEGABYTE];
+			int length = 0;
+			outStream.writeObject(photo);
+			int filesize = (int) file.length();
+			outStream.writeObject(filesize);
+			while((length = is.read(buffer, 0, buffer.length)) > 0) {
+				System.out.println(length);
+				outStream.write(buffer, 0, length);
+			}
+			System.out.println("Saiu do sendPhoto");
+			is.close();
+		}
+
+		private String getFromDoc(String docName, String tag) throws FileNotFoundException {
+			Scanner sc = new Scanner(new File(docName + ".txt"));
+			while(sc.hasNextLine()){
+				String line = sc.nextLine();
+				String[] sp = line.split(":");
+				if(sp[0].equals(tag)) {
+					if(sp.length > 1){
+						sc.close();
+						return sp[1];
+					}
+				}
+			}
+			sc.close();
+			return "";
+		}
+
 		private String viewFollowers(String user) throws FileNotFoundException{
 			Scanner sc = new Scanner(new File(user+ ".txt"));
 			while(sc.hasNextLine()) {
@@ -156,7 +215,8 @@ public class SeiTchizServer {
 		private void post(String user, String path) throws IOException {
 			File fileIn = new File(path);
 			saveImage(user, fileIn);
-			addToDoc(user, "Fotos", user + ";" + fileIn.getName());
+			addToDoc(user, "Fotos", user + ";" + fileIn.getName() + "(0)");
+			addToDoc("Fotos", null, user + ":" + fileIn.getName());
 		}
 
 		private void saveImage(String user, File fileIn) throws IOException {
@@ -165,7 +225,8 @@ public class SeiTchizServer {
 
 			byte[] buffer = new byte[MEGABYTE];
 			int length = 0;
-			while ((length = is.read(buffer)) > 0) {
+			while (is.available() > 0) {
+				length = is.read(buffer, 0, buffer.length);
 				os.write(buffer, 0, length);
 			}
 
@@ -244,13 +305,23 @@ public class SeiTchizServer {
 			File temp = new File("temp.txt");
 			Scanner sc = new Scanner (doc);
 			PrintWriter pt = new PrintWriter (temp);
-			while(sc.hasNextLine()){
-				String line = sc.nextLine();
-				String[] sp = line.split(":");
-				if(sp[0].equals(tag)) {
-					line = line + (info + ",");
-				} 
-				pt.println(line);
+			if(tag != null) {
+				while(sc.hasNextLine()){
+					String line = sc.nextLine();
+					String[] sp = line.split(":");
+					if(sp[0].equals(tag)) {
+						line = line + (info + ",");
+					} 
+					pt.println(line);
+				}
+			} else {
+				StringBuilder bob = new StringBuilder();
+				while(sc.hasNextLine()){
+					String line = sc.nextLine();
+					bob.append(line + "\n");
+				}
+				pt.println(info);
+				pt.println(bob.toString() + "\n");
 			}
 			doc.delete();
 			temp.renameTo(doc);

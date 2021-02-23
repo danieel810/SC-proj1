@@ -1,6 +1,6 @@
 User:Ricardo
 Seguidores:Daniel,
 Seguindo:Daniel,
-Fotos:
+Fotos:Ricardo;unknown.png(0),Ricardo;blackScreen.jpg(0),Ricardo;pinkScreen.jpg(0),Ricardo;blackScreen.jpg(0),
 Grupos:
 Owner:
