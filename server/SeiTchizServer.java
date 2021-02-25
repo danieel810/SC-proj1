@@ -48,7 +48,6 @@ public class SeiTchizServer {
 
 				if(users.get(user) != null) {
 					String pw = users.get(user).get(1); // Tudo deu certo;
-					System.out.println(pw);
 					if(pw.equals(passwd)) {
 						outStream.writeObject(1);
 					} else {
@@ -117,7 +116,6 @@ public class SeiTchizServer {
 						break;
 					default:
 						System.out.println("Entrou no default");
-						//Avisar que o cliente foi mongo
 						b = false;
 						outStream.writeObject("saiu");
 						break;
@@ -142,27 +140,21 @@ public class SeiTchizServer {
 		}
 
 		private void wall(String user, int nfotos) throws IOException {
-			System.out.println("Entra no wall");
 			List<String> seguindo = Arrays.asList(getFromDoc(user, "Seguindo").split(","));
 			Scanner fotos = new Scanner(new File("Fotos.txt"));
 			while(fotos.hasNextLine()) {
-				System.out.println("Entra no while");
 				String[] t = fotos.nextLine().split(":");
 				if(seguindo.contains(t[0]) && nfotos > 0) {
-					System.out.println("Descobre um gah");
 					outStream.writeObject(nfotos > 0);
 					nfotos--;
 					sendPhoto(t[0], t[1]);
 				}
 			}
 			outStream.writeObject(false);
-			System.out.println("Saiu do wall");
 			fotos.close();
 		}
 
 		private void sendPhoto(String user, String photo) throws IOException {
-			System.out.println("Entra no sendPhoto");
-			System.out.println(photo);
 			File file = new File(user + ";" + photo);
 			InputStream is = new FileInputStream(file);
 			byte[] buffer = new byte[MEGABYTE];
@@ -171,10 +163,8 @@ public class SeiTchizServer {
 			int filesize = (int) file.length();
 			outStream.writeObject(filesize);
 			while((length = is.read(buffer, 0, buffer.length)) > 0) {
-				System.out.println(length);
 				outStream.write(buffer, 0, length);
 			}
-			System.out.println("Saiu do sendPhoto");
 			is.close();
 		}
 

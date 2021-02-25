@@ -24,3 +24,5 @@ Se o /mnt/ não for posto a foto não vai ser reconhecida
 #TODO
 
 Alterar viewFollowers para usar getFromDoc
+
+Post tem de receber foto pela socket vinda do cliente!
