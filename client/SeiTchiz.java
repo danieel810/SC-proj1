@@ -1,7 +1,11 @@
 package client;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -51,35 +55,16 @@ public class SeiTchiz {
 			}
 			String line = null;
 			do {
-				System.out.println("Escolha uma opção: ");
-				System.out.println("follow <userID>");
-				System.out.println("unfollow <userID>");
-				System.out.println("viewfollowers");
-				System.out.println("post <photo>");
-				System.out.println("wall <nPhotos>");
-				System.out.println("like <photoID>");
-				System.out.println("newgroup <groupID>");
-				System.out.println("addu <userID> <groupID>");
-				System.out.println("removeu <userID> <groupID>");
-				System.out.println("ginfo [groupID]");
-				System.out.println("msg <groupID> <msg>");
-				System.out.println("collect <groupID>");
-				System.out.println("history <groupID>");
-				System.out.println("quit");
+				printOptions();
 				line = sc.nextLine();
-				outStream.writeObject(line);
-				String[] t = line.split("\\s+");
-				if(t[0].equals("wall") || t[0].equals("w")){
-					wall();	
-				} else {
-					String ssss = (String) inStream.readObject();
-					System.out.println(ssss);
-				}
+				pedido(line);
 			} while(!line.equals("quit"));
 			
 			socket.close();
 			sc.close();
 			
+		} catch(FileNotFoundException e) {
+			System.out.println("Ficheiro não existe");
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -87,6 +72,106 @@ public class SeiTchiz {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static void pedido(String line) throws IOException, ClassNotFoundException {
+		String[] t = line.split("\\s+");
+		switch(t[0]) {
+		case "f":
+		case "follow":
+			if(t.length == 2) {
+				outStream.writeObject(line);
+				System.out.println((String) inStream.readObject());
+			}
+			break;
+		case "u":
+		case "unfollow":
+			if(t.length == 2) {
+				outStream.writeObject(line);
+				System.out.println((String) inStream.readObject());
+			}
+			break;
+		case "v":
+		case "viewfollowers":
+			if(t.length == 2) {
+				outStream.writeObject(line);
+				System.out.println((String) inStream.readObject());
+			}
+			break;
+		case "p":
+		case "post":
+			post(line);
+			break;
+		case "w":
+		case "wall":
+			outStream.writeObject(line);
+			wall();
+			break;
+		case "l":
+		case "like":
+			break;
+		case "n":
+		case "newgroup":
+			break;
+		case "a":
+		case "addu":
+			break;
+		case "r":
+		case "removeu":
+			break;
+		case "g":
+		case "ginfo":
+			break;
+		case "m":
+		case "msg":
+			break;
+		case "c":
+		case "collect":
+			break;
+		case "h":
+		case "history":
+			break;
+		default:
+			outStream.writeObject(line);
+			System.out.println((String) inStream.readObject());
+			break;
+		}
+	}
+
+	private static void post(String line) throws IOException {
+		outStream.writeObject(line);
+		String[] t = line.split("\\s+");
+		File foto = new File(t[1]);
+		outStream.writeObject(foto.getName());
+		int filesize = (int) foto.length();
+		outStream.writeObject(filesize);
+		InputStream is = new FileInputStream(foto);
+		
+		byte[] buffer = new byte[MEGABYTE];
+		int length = 0;
+		while (is.available() > 0) {
+			length = is.read(buffer, 0, buffer.length);
+			outStream.write(buffer, 0, length);
+		}
+		is.close();
+	}
+
+	private static void printOptions() {
+		System.out.println("Escolha uma opção: ");
+		System.out.println("follow <userID>");
+		System.out.println("unfollow <userID>");
+		System.out.println("viewfollowers");
+		System.out.println("post <photo>");
+		System.out.println("wall <nPhotos>");
+		System.out.println("like <photoID>");
+		System.out.println("newgroup <groupID>");
+		System.out.println("addu <userID> <groupID>");
+		System.out.println("removeu <userID> <groupID>");
+		System.out.println("ginfo [groupID]");
+		System.out.println("msg <groupID> <msg>");
+		System.out.println("collect <groupID>");
+		System.out.println("history <groupID>");
+		System.out.println("quit");
 	}
 
 	private static void wall() throws ClassNotFoundException, IOException {

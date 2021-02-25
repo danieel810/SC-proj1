@@ -13,7 +13,7 @@ CLASSES = \
 default: classes
 
 run: classes
-	$(JVM) $(SERVER) 127.0.0.1:45678 Daniel
+	$(JVM) $(SERVER) 127.0.0.1:45678 ToZe
 
 classes: $(CLASSES:.java=.class)
 

@@ -82,7 +82,7 @@ public class SeiTchizServer {
 						break;
 					case "p":
 					case "post":
-						post(user, line[1]);
+						post(user);
 						outStream.writeObject("foto adicionada");
 						break;
 					case "w":
@@ -202,14 +202,21 @@ public class SeiTchizServer {
 			return "erro";
 		}
 
-		private void post(String user, String path) throws IOException {
+		private void post(String user) throws IOException, ClassNotFoundException {
+			/*
 			File fileIn = new File(path);
 			saveImage(user, fileIn);
 			addToDoc(user, "Fotos", user + ";" + fileIn.getName() + "(0)");
 			addToDoc("Fotos", null, user + ":" + fileIn.getName());
+			*/
+			String nameFoto = (String) inStream.readObject();
+			System.out.println(nameFoto);
+			File out = new File(user + ";" + nameFoto);
+			saveImage(out);
 		}
 
-		private void saveImage(String user, File fileIn) throws IOException {
+		private void saveImage(File fileIn) throws IOException {
+			/*
 			InputStream is = new FileInputStream(fileIn);			
 			OutputStream os = new FileOutputStream(new File(user + ";" + fileIn.getName()));
 
@@ -222,6 +229,8 @@ public class SeiTchizServer {
 
 			is.close();
 			os.close();
+			*/
+			
 		}
 
 		private void unfollow(String user, String userASeguir) {
