@@ -1,22 +1,25 @@
 package server;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
+
+import javax.imageio.ImageIO;
 
 public class SeiTchizServer {
 
@@ -38,7 +41,7 @@ public class SeiTchizServer {
 			try {
 				outStream = new ObjectOutputStream(socket.getOutputStream());
 				inStream = new ObjectInputStream(socket.getInputStream());
-
+				
 				String user = null;
 				String passwd = null;
 
@@ -82,6 +85,7 @@ public class SeiTchizServer {
 						break;
 					case "p":
 					case "post":
+						System.out.println("Entrou no post");
 						post(user);
 						outStream.writeObject("foto adicionada");
 						break;
@@ -129,7 +133,7 @@ public class SeiTchizServer {
 			} catch (ArrayIndexOutOfBoundsException e) {
 				// Avisar que o stor é mongo
 			} catch(FileNotFoundException e){
-				System.out.println("Ficheir não existe");
+				System.out.println("Ficheiro não existe");
 			}
 			catch(IOException e) {
 				e.printStackTrace();				
@@ -209,28 +213,43 @@ public class SeiTchizServer {
 			addToDoc(user, "Fotos", user + ";" + fileIn.getName() + "(0)");
 			addToDoc("Fotos", null, user + ":" + fileIn.getName());
 			*/
-			String nameFoto = (String) inStream.readObject();
+			//String nameFoto = (String) inStream.readObject();
+			String nameFoto = null;
 			System.out.println(nameFoto);
-			File out = new File(user + ";" + nameFoto);
-			saveImage(out);
+			saveImage(user, nameFoto);
+			int id = Integer.parseInt(getFromDoc(user, "ID"));
+			id++;
+			String finale = String.valueOf(id) + "/0";
+			addToDoc(user, "Fotos", finale);
+			addToDoc("Fotos", null, user + ":" + nameFoto);
 		}
-
-		private void saveImage(File fileIn) throws IOException {
-			/*
-			InputStream is = new FileInputStream(fileIn);			
-			OutputStream os = new FileOutputStream(new File(user + ";" + fileIn.getName()));
-
-			byte[] buffer = new byte[MEGABYTE];
-			int length = 0;
-			while (is.available() > 0) {
-				length = is.read(buffer, 0, buffer.length);
-				os.write(buffer, 0, length);
-			}
-
-			is.close();
-			os.close();
-			*/
+/*
+		private void saveImage(String user, String name) throws IOException, ClassNotFoundException {
+			int filesize = (int) inStream.readObject();
+			System.out.println(filesize);
 			
+			OutputStream os = new FileOutputStream(user + ";" + name);
+			byte[] buffer = new byte[MEGABYTE];
+			int read = 0;
+			int remaining = filesize;
+			//Math.min(buffer.length, remaining)
+			while((read = inStream.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
+				remaining -= read;
+				System.out.println("Remaining: " + remaining);
+				os.write(buffer, 0, read);
+			}
+			os.close();
+		}
+		*/
+
+		private void saveImage(String user, String nameFoto) throws IOException {
+			byte[] sizeAr = new byte[4];
+			inStream.read(sizeAr);
+			int size = ByteBuffer.wrap(sizeAr).asIntBuffer().get();
+			byte[] imageAr = new byte[size];
+			inStream.read(imageAr);
+			BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageAr));
+			ImageIO.write(image, "jpg", new File(user + "2"+".jpg"));
 		}
 
 		private void unfollow(String user, String userASeguir) {
@@ -351,6 +370,7 @@ public class SeiTchizServer {
 			t.println("Seguidores:");
 			t.println("Seguindo:");
 			t.println("Fotos:");
+			t.println("ID:0");
 			t.println("Grupos:");
 			t.println("Owner:");
 			t.close();

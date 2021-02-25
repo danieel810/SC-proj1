@@ -1,6 +1,7 @@
 User:Ricardo
-Seguidores:Daniel,ToZe,
-Seguindo:Daniel,
-Fotos:Ricardo;unknown.png(0),Ricardo;blackScreen.jpg(0),Ricardo;pinkScreen.jpg(0),Ricardo;blackScreen.jpg(0),
+Seguidores:
+Seguindo:ToZe,
+Fotos:1/0,1/0,1/0,1/0,1/0,1/0,1/0,1/0,1/0,1/0,1/0,1/0,1/0,1/0,
+ID:0
 Grupos:
 Owner:

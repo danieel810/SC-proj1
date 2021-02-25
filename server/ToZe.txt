@@ -1,6 +1,7 @@
 User:ToZe
-Seguidores:
-Seguindo:Ricardo,
-Fotos:
+Seguidores:Ricardo,
+Seguindo:
+Fotos:1/0,1/0,1/0,
+ID:0
 Grupos:
 Owner:

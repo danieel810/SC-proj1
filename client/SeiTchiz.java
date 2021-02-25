@@ -1,17 +1,20 @@
 package client;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.Scanner;
+
+import javax.imageio.ImageIO;
 
 public class SeiTchiz {
 
@@ -101,6 +104,7 @@ public class SeiTchiz {
 		case "p":
 		case "post":
 			post(line);
+			System.out.println((String) inStream.readObject());
 			break;
 		case "w":
 		case "wall":
@@ -138,22 +142,39 @@ public class SeiTchiz {
 		}
 	}
 
-	private static void post(String line) throws IOException {
+	private static void post(String line) throws IOException, ClassNotFoundException {
 		outStream.writeObject(line);
+		String[] t = line.split("\\s+");
+	
+		
+		BufferedImage image = ImageIO.read(new File(t[1]));
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		ImageIO.write(image, "jpg", byteArrayOutputStream);
+		byte[] size = ByteBuffer.allocate(4).putInt(byteArrayOutputStream.size()).array();
+		outStream.write(size);
+		outStream.write(byteArrayOutputStream.toByteArray());
+		outStream.flush();
+		/*
 		String[] t = line.split("\\s+");
 		File foto = new File(t[1]);
 		outStream.writeObject(foto.getName());
 		int filesize = (int) foto.length();
 		outStream.writeObject(filesize);
+
 		InputStream is = new FileInputStream(foto);
 		
 		byte[] buffer = new byte[MEGABYTE];
 		int length = 0;
-		while (is.available() > 0) {
-			length = is.read(buffer, 0, buffer.length);
+		while ((length = is.read(buffer, 0, buffer.length)) >= 0) {
+			//length = is.read(buffer, 0, buffer.length);
+			System.out.println("Length: " + length);
 			outStream.write(buffer, 0, length);
 		}
+		//outStream.write(0);
 		is.close();
+		//
+		 *
+		 */
 	}
 
 	private static void printOptions() {

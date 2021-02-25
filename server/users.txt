@@ -1,3 +1,2 @@
-ToZe:ToZe G:to
+ToZe:To ZE:to
 Ricardo:Ricardo G:t
-Daniel:Daniel B:tt
