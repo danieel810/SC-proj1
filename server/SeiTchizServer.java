@@ -382,7 +382,7 @@ public class SeiTchizServer {
 				e.printStackTrace();
 			}
 		}
-		//sSoc.close();
+		//sSoc.close();dwadaw
 	}
 
 	private void loadUsers() throws FileNotFoundException {
