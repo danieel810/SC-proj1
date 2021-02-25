@@ -47,7 +47,7 @@ public class SeiTchiz {
 			case 2: //User existe mas a pw não é essa
 				//TODO
 				break;
-			case 3: //User não existe
+			case 3: //User não existe dwa
 				System.out.println((String)inStream.readObject());
 				String nome = sc.nextLine();
 				outStream.writeObject(nome);
