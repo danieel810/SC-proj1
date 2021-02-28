@@ -193,7 +193,7 @@ public class SeiTchiz {
 		System.out.println("collect <groupID>");
 		System.out.println("history <groupID>");
 		System.out.println("quit");
-	}
+	} //uhm
 
 	private static void wall() throws ClassNotFoundException, IOException {
 		boolean bb = true;
