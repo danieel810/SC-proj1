@@ -3,5 +3,5 @@ Seguidores:
 Seguindo:Ricardo,Daniel,
 Fotos:
 ID:0
-Grupos:
-Owner:
+Grupos:BoasMpts,
+Owner:BoasMpts,

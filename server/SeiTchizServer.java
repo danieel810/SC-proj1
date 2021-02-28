@@ -95,6 +95,8 @@ public class SeiTchizServer {
 						break;
 					case "n":
 					case "newgroup":
+						newGroup(user, line[1]);
+						outStream.writeObject("Group created");
 						break;
 					case "a":
 					case "addu":
@@ -137,6 +139,16 @@ public class SeiTchizServer {
 				e1.printStackTrace();
 			}
 
+		}
+
+		private void newGroup(String user, String groupID) throws FileNotFoundException {
+			addToDoc(user, "Grupos", groupID);
+			addToDoc(user, "Owner", groupID);
+			PrintWriter pw = new PrintWriter(groupID + ".txt");
+			pw.println("Owner:" + user);
+			pw.println("Members:");
+			pw.println("Chat:");
+			pw.close();
 		}
 
 		private void like(String user, String photoID) throws FileNotFoundException { //photoID é user:id
