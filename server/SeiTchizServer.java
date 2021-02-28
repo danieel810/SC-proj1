@@ -139,7 +139,7 @@ public class SeiTchizServer {
 				e.printStackTrace();				
 			} catch (ClassNotFoundException e1) {
 				e1.printStackTrace();
-			}
+			} //Uhm
 
 		}
 		
