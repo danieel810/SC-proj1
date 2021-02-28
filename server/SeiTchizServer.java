@@ -1,10 +1,9 @@
 package server;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -12,14 +11,11 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
-
-import javax.imageio.ImageIO;
 
 public class SeiTchizServer {
 
@@ -41,7 +37,7 @@ public class SeiTchizServer {
 			try {
 				outStream = new ObjectOutputStream(socket.getOutputStream());
 				inStream = new ObjectInputStream(socket.getInputStream());
-				
+
 				String user = null;
 				String passwd = null;
 
@@ -87,7 +83,6 @@ public class SeiTchizServer {
 					case "post":
 						System.out.println("Entrou no post");
 						post(user);
-						outStream.writeObject("foto adicionada");
 						break;
 					case "w":
 					case "wall":
@@ -96,6 +91,7 @@ public class SeiTchizServer {
 						break;
 					case "l":
 					case "like":
+						like(user, line[1]);
 						break;
 					case "n":
 					case "newgroup":
@@ -139,103 +135,53 @@ public class SeiTchizServer {
 				e.printStackTrace();				
 			} catch (ClassNotFoundException e1) {
 				e1.printStackTrace();
-			} //Uhm
+			}
 
 		}
-		
-		private void follow(String user, String userASeguir) {
-			if(users.get(userASeguir) != null) {
-				try {
-					if(!seguir(user, userASeguir)) {
-						addToDoc(userASeguir, "Seguidores", user);
 
-						addToDoc(user, "Seguindo", userASeguir);
-					}
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
+		private void like(String user, String photoID) throws FileNotFoundException { //photoID é user:id
+			String[] profilePhoto = photoID.split(":");
+			String[] photos = getFromDoc(profilePhoto[0], "Fotos").split(",");
+			for(String photo : photos) {
+				if(photo.split("/")[0].equals(profilePhoto[1])) {
+					removeFromDoc(profilePhoto[0], "Fotos", photo);
+					String newInfo = photo.split("/")[0] + "/" + Integer.parseInt(photo.split("/")[1] + 1);
+					addToDoc(profilePhoto[0], "Fotos", newInfo);
 				}
 			}
 		}
 
-		private void unfollow(String user, String userASeguir) {
-			if(users.get(userASeguir) != null) {
-				try {
-					removeFromDoc(userASeguir, "Seguidores", user);
-
-					removeFromDoc(user, "Seguindo", userASeguir);
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		
-		private String viewFollowers(String user) throws FileNotFoundException{
-			Scanner sc = new Scanner(new File(user+ ".txt"));
-			while(sc.hasNextLine()) {
-				String line = sc.nextLine();
-				String[] sp = line.split(":");
-				if(sp[0].equals("Seguidores")) {
-					sc.close();
-					if(sp.length > 1) {
-						return sp[1].substring(0, sp[1].length() - 1);
-					} else {
-						return "Não tem followers";
-					}
-				}
-			}
-			sc.close();
-			return "erro";
-		}
-
-		private void post(String user) throws IOException, ClassNotFoundException {
-			/*
-			File fileIn = new File(path);
-			saveImage(user, fileIn);
-			addToDoc(user, "Fotos", user + ";" + fileIn.getName() + "(0)");
-			addToDoc("Fotos", null, user + ":" + fileIn.getName());
-			*/
-			String namePhoto = (String) inStream.readObject();
-			System.out.println(namePhoto);
-			File out = new File(user + ";" + namePhoto);
-			//saveImage(out);
-		}
-
-		private void wall(String user, int nPhotos) throws IOException {
-			List<String> following = Arrays.asList(getFromDoc(user, "Seguindo").split(","));
-			Scanner photos = new Scanner(new File("Fotos.txt"));
-			while(photos.hasNextLine()) {
-				String[] t = photos.nextLine().split(":");
-				if(following.contains(t[0]) && nPhotos > 0) {
-					outStream.writeObject(nPhotos > 0);
-					nPhotos--;
+		private void wall(String user, int nfotos) throws IOException {
+			List<String> seguindo = Arrays.asList(getFromDoc(user, "Seguindo").split(","));
+			Scanner fotos = new Scanner(new File("Fotos.txt"));
+			while(fotos.hasNextLine()) {
+				String[] t = fotos.nextLine().split(":");
+				if(seguindo.contains(t[0]) && nfotos > 0) {
+					outStream.writeObject(nfotos > 0);
+					nfotos--;
 					sendPhoto(t[0], t[1]);
+					sendIDAndLikes(t[0], t[1]);
 				}
 			}
 			outStream.writeObject(false);
-			photos.close();
+			fotos.close();
 		}
 
-		private void like(String user, String photoID){
-			String[] profilePhoto = photoID.split(":");
-			String[] photos = getFromDoc(profilePhoto[0], "Fotos").split(",");
-			String[] newPhoto = null;
-			for(String photo : photos){
-				String aux = photo.split("/");
-				if(aux[0].equals(profilePhoto[1])){
-					newPhoto = aux;
-					removeFromDoc(profilePhoto[0], photo);
+		private void sendIDAndLikes(String user, String id) throws IOException {
+			String[] photos = getFromDoc(user, "Fotos").split(",");
+			for(String photo : photos) {
+				if(photo.split("/")[0].equals(id)) {
+					outStream.writeObject(user + ": (id/likes) " + photo);
 				}
 			}
-			newPhoto[1] = (int)newPhoto[1] + 1 ;
-			addToDoc(profilePhoto[0], "Fotos", newPhoto[0] + newPhoto[1]);
 		}
 
 		private void sendPhoto(String user, String photo) throws IOException {
-			File file = new File(user + ";" + photo);
+			File file = new File(user + ";" + photo + ".jpg");
 			InputStream is = new FileInputStream(file);
 			byte[] buffer = new byte[MEGABYTE];
 			int length = 0;
-			outStream.writeObject(photo);
+			outStream.writeObject(photo + ".jpg");
 			int filesize = (int) file.length();
 			outStream.writeObject(filesize);
 			while((length = is.read(buffer, 0, buffer.length)) > 0) {
@@ -259,62 +205,100 @@ public class SeiTchizServer {
 			sc.close();
 			return "";
 		}
-/*
-		private void post(String user) throws IOException, ClassNotFoundException {
-			/*
-			File fileIn = new File(path);
-			saveImage(user, fileIn);
-			addToDoc(user, "Fotos", user + ";" + fileIn.getName() + "(0)");
-			addToDoc("Fotos", null, user + ":" + fileIn.getName());
-			*/
-			//String nameFoto = (String) inStream.readObject();
-			/*
-			String nameFoto = null;
-			System.out.println(nameFoto);
-			saveImage(user, nameFoto);
+
+		private String viewFollowers(String user) throws FileNotFoundException{
+			Scanner sc = new Scanner(new File(user+ ".txt"));
+			while(sc.hasNextLine()) {
+				String line = sc.nextLine();
+				String[] sp = line.split(":");
+				if(sp[0].equals("Seguidores")) {
+					sc.close();
+					if(sp.length > 1) {
+						return sp[1].substring(0, sp[1].length() - 1);
+					} else {
+						return "Não tem followers";
+					}
+				}
+			}
+			sc.close();
+			return "erro";
+		}
+		private void post(String user) throws ClassNotFoundException, IOException {
 			int id = Integer.parseInt(getFromDoc(user, "ID"));
 			id++;
-			String finale = String.valueOf(id) + "/0";
-			addToDoc(user, "Fotos", finale);
-			addToDoc("Fotos", null, user + ":" + nameFoto);
-		}
-		*/
-/*
-		private void saveImage(String user, String name) throws IOException, ClassNotFoundException {
-			int filesize = (int) inStream.readObject();
-			System.out.println(filesize);
-			
-			OutputStream os = new FileOutputStream(user + ";" + name);
-		}
-		private void saveImage(File fileIn) throws IOException {
-			/*
-			InputStream is = new FileInputStream(fileIn);			
-			OutputStream os = new FileOutputStream(new File(user + ";" + fileIn.getName()));
 
+			saveImage(user, id);
+
+
+			addToDoc(user, "Fotos", String.valueOf(id) + "/0");
+			addToDoc("Fotos", null, user + ":" + id);
+			changeID(user, id);
+
+		}
+
+		private void changeID(String user, int id) throws FileNotFoundException {
+			Scanner sc = new Scanner(new File(user + ".txt"));
+			StringBuilder bob = new StringBuilder();
+			while(sc.hasNextLine()) {
+				String line = sc.nextLine();
+				String[] sp = line.split(":");
+				if(sp[0].equals("ID")) {
+					bob.append("ID:" + id + "\n");
+				} else {
+					bob.append(line + "\n");
+				}
+			}
+			PrintWriter pw = new PrintWriter(user + ".txt");
+			pw.print(bob.toString());
+			pw.close();
+			sc.close();
+		}
+
+		private void saveImage(String user, int id) throws ClassNotFoundException, IOException {          
+			int filesize = (int) inStream.readObject();
+
+			FileOutputStream fos = new FileOutputStream(user + ";" + id + ".jpg");
 
 			byte[] buffer = new byte[MEGABYTE];
 			int read = 0;
 			int remaining = filesize;
-			//Math.min(buffer.length, remaining)
 			while((read = inStream.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
 				remaining -= read;
-				System.out.println("Remaining: " + remaining);
-				os.write(buffer, 0, read);
+				fos.write(buffer, 0, read);
 			}
-			os.close();
-		}
-		*/
-
-		private void saveImage(String user, String nameFoto) throws IOException {
-			byte[] sizeAr = new byte[4];
-			inStream.read(sizeAr);
-			int size = ByteBuffer.wrap(sizeAr).asIntBuffer().get();
-			byte[] imageAr = new byte[size];
-			inStream.read(imageAr);
-			BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageAr));
-			ImageIO.write(image, "jpg", new File(user + "2"+".jpg"));
+			fos.close();
+			outStream.writeObject("foto adicionada");
+			outStream.flush();
+			inStream.skip(100000);
+			System.out.println("Saiu do post");
 		}
 
+
+		private void unfollow(String user, String userASeguir) {
+			if(users.get(userASeguir) != null) {
+				try {
+					removeFromDoc(userASeguir, "Seguidores", user);
+
+					removeFromDoc(user, "Seguindo", userASeguir);
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		private void follow(String user, String userASeguir) {
+			if(users.get(userASeguir) != null) {
+				try {
+					if(!seguir(user, userASeguir)) {
+						addToDoc(userASeguir, "Seguidores", user);
+
+						addToDoc(user, "Seguindo", userASeguir);
+					}
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
 		private boolean seguir(String user, String userASeguir) throws FileNotFoundException {
 			Scanner sc = new Scanner(new File(userASeguir + ".txt"));
@@ -377,7 +361,7 @@ public class SeiTchizServer {
 					bob.append(line + "\n");
 				}
 				pt.println(info);
-				pt.println(bob.toString() + "\n");
+				pt.print(bob.toString());
 			}
 			doc.delete();
 			temp.renameTo(doc);
@@ -386,13 +370,17 @@ public class SeiTchizServer {
 		}
 
 		private void registaUser(String user, String passwd, String nome) throws FileNotFoundException {
+			ArrayList<String> list = new ArrayList<>();
+			list.add(nome);
+			list.add(passwd);
+			users.put(user, list);
 			PrintWriter pw = new PrintWriter(FILE);
 			for(String s : users.keySet()) {
 				pw.print(s + ":");
-				ArrayList<String> list = users.get(s);
-				for (int i = 0; i < list.size(); i++) {
-					pw.print(list.get(i));
-					if(i + 1 < list.size()) {
+				ArrayList<String> lista = users.get(s);
+				for (int i = 0; i < lista.size(); i++) {
+					pw.print(lista.get(i));
+					if(i + 1 < lista.size()) {
 						pw.print(":");
 					}
 				}
@@ -406,7 +394,7 @@ public class SeiTchizServer {
 			t.println("Fotos:");
 			t.println("ID:0");
 			t.println("Grupos:");
-			t.println("Owner:");
+			t.print("Owner:");
 			t.close();
 		}
 	}
@@ -444,11 +432,11 @@ public class SeiTchizServer {
 		while(sc.hasNextLine()) {
 			String line = sc.nextLine();
 			// user:nome:pw
-			String[] info = line.split(":");
+			String[] credencias = line.split(":");
 			ArrayList<String> list = new ArrayList<>();
-			list.add(info[1]);
-			list.add(info[2]);
-			users.put(info[0], list);
+			list.add(credencias[1]);
+			list.add(credencias[2]);
+			users.put(credencias[0], list);
 		}
 
 		sc.close();

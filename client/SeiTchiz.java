@@ -1,8 +1,7 @@
 package client;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -11,17 +10,14 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.util.Scanner;
-
-import javax.imageio.ImageIO;
 
 public class SeiTchiz {
 
 	private static final int MEGABYTE = 1024;
 	private static ObjectOutputStream outStream;
 	private static ObjectInputStream inStream;
-	
+
 	public static void main(String[] args) {
 		Socket socket = null;
 		String[] AdressEporta = args[0].split(":");
@@ -49,7 +45,11 @@ public class SeiTchiz {
 				break;
 			case 2: //User existe mas a pw não é essa
 				//TODO
-				break;
+				System.out.println("Password Errada!");
+				sc.close();
+				socket.close();
+				return;
+				//break;
 			case 3: //User não existe
 				System.out.println((String)inStream.readObject());
 				String nome = sc.nextLine();
@@ -62,10 +62,10 @@ public class SeiTchiz {
 				line = sc.nextLine();
 				pedido(line);
 			} while(!line.equals("quit"));
-			
+
 			socket.close();
 			sc.close();
-			
+
 		} catch(FileNotFoundException e) {
 			System.out.println("Ficheiro não existe");
 		} catch (UnknownHostException e) {
@@ -85,6 +85,8 @@ public class SeiTchiz {
 			if(t.length == 2) {
 				outStream.writeObject(line);
 				System.out.println((String) inStream.readObject());
+			} else {
+				System.out.println("Executou mal o metodo");
 			}
 			break;
 		case "u":
@@ -92,6 +94,8 @@ public class SeiTchiz {
 			if(t.length == 2) {
 				outStream.writeObject(line);
 				System.out.println((String) inStream.readObject());
+			} else {
+				System.out.println("Executou mal o metodo");
 			}
 			break;
 		case "v":
@@ -99,12 +103,15 @@ public class SeiTchiz {
 			if(t.length == 2) {
 				outStream.writeObject(line);
 				System.out.println((String) inStream.readObject());
+			} else {
+				System.out.println("Executou mal o metodo");
 			}
 			break;
 		case "p":
 		case "post":
+			outStream.writeObject(line);
 			post(line);
-			System.out.println((String) inStream.readObject());
+			System.out.println("Saiu do post switch");
 			break;
 		case "w":
 		case "wall":
@@ -113,6 +120,11 @@ public class SeiTchiz {
 			break;
 		case "l":
 		case "like":
+			if(t.length == 2) {
+				outStream.writeObject(line);
+			} else {
+				System.out.println("Executou mal o metodo");
+			}
 			break;
 		case "n":
 		case "newgroup":
@@ -143,38 +155,20 @@ public class SeiTchiz {
 	}
 
 	private static void post(String line) throws IOException, ClassNotFoundException {
-		outStream.writeObject(line);
 		String[] t = line.split("\\s+");
-	
-		
-		BufferedImage image = ImageIO.read(new File(t[1]));
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		ImageIO.write(image, "jpg", byteArrayOutputStream);
-		byte[] size = ByteBuffer.allocate(4).putInt(byteArrayOutputStream.size()).array();
-		outStream.write(size);
-		outStream.write(byteArrayOutputStream.toByteArray());
-		outStream.flush();
-		/*
-		String[] t = line.split("\\s+");
-		File foto = new File(t[1]);
-		outStream.writeObject(foto.getName());
-		int filesize = (int) foto.length();
+
+		File file = new File(t[1]);
+
+		int filesize = (int) file.length();
 		outStream.writeObject(filesize);
 
-		InputStream is = new FileInputStream(foto);
-		
+		FileInputStream fis = new FileInputStream(file);
 		byte[] buffer = new byte[MEGABYTE];
-		int length = 0;
-		while ((length = is.read(buffer, 0, buffer.length)) >= 0) {
-			//length = is.read(buffer, 0, buffer.length);
-			System.out.println("Length: " + length);
-			outStream.write(buffer, 0, length);
+		while(fis.read(buffer, 0, buffer.length)> 0) {
+			outStream.write(buffer, 0, buffer.length);
 		}
-		//outStream.write(0);
-		is.close();
-		//
-		 *
-		 */
+		fis.close();
+		System.out.println((String) inStream.readObject());
 	}
 
 	private static void printOptions() {
@@ -193,9 +187,11 @@ public class SeiTchiz {
 		System.out.println("collect <groupID>");
 		System.out.println("history <groupID>");
 		System.out.println("quit");
-	} //uhm
+	}
 
 	private static void wall() throws ClassNotFoundException, IOException {
+		StringBuilder bob = new StringBuilder();
+		bob.append("Fotos: \n");
 		boolean bb = true;
 		while(bb){
 			bb = (boolean) inStream.readObject();
@@ -211,7 +207,10 @@ public class SeiTchiz {
 					os.write(buffer, 0, read);
 				}
 				os.close();
+
+				bob.append(inStream.readObject() + "\n");
 			}	
 		}
+		System.out.println(bob.toString());
 	}
 }
