@@ -194,7 +194,14 @@ public class SeiTchizServer {
 			if(grupos == ""){
 				bob.append("You aren't a member of any group" + "\n");
 			}else {
-				bob.append("You are member of: " + grupos.substring(0, grupos.length() -1) + "\n");
+				bob.append("You are member of: ");
+				String[] g = grupos.split(",");
+				for(String gr : g){
+					bob.append(gr.split("/")[0] + ",");
+				}
+				bob.deleteCharAt(bob.length() - 1);
+				bob.append("\n");
+				//bob.append("You are member of: " + grupos.substring(0, grupos.length() -1) + "\n");
 			}
 
 			if(owner == ""){
