@@ -107,6 +107,11 @@ public class SeiTchizServer {
 						break;
 					case "g":
 					case "ginfo":
+						if(line.length == 2){
+							ginfo(user, line[1]);
+						}else{
+							ginfo(user);
+						}
 						break;
 					case "m":
 					case "msg":
@@ -142,7 +147,46 @@ public class SeiTchizServer {
 
 		}
 
-		private void removeMember(String owner, String userID, String groupID) throws IOException {
+		private void ginfo(String user) throws FileNotFoundException, IOException {
+			String grupos = getFromDoc(user, "Grupos");
+			String owner = getFromDoc(user, "Owner");
+			StringBuilder bob = new StringBuilder();
+			if(grupos == ""){
+				bob.append("You aren't a member of any group" + "\n");
+			}else {
+				bob.append("You are member of: " + grupos.substring(0, grupos.length() -1) + "\n");
+			}
+
+			if(owner == ""){
+				bob.append("You aren't the owner of any group" + "\n");
+			}else {
+				bob.append("You are the owner of: " + owner.substring(0, owner.length() -1) + "\n");
+			}
+			outStream.writeObject(bob.toString());
+		}
+
+		private void ginfo(String user, String groupID) throws FileNotFoundException, IOException{
+			File grupo = new File(groupID + ".txt");
+			if(grupo.exists()){
+				String owner = getFromDoc(groupID, "Owner");
+				if(!user.equals(owner)){
+					outStream.writeObject("You aren't the owner of the group");
+				} else {
+					String members = getFromDoc(groupID, "Members");
+					if(members != ""){
+						outStream.writeObject("The owner of the group is: " + owner + "\n" +
+												"The members of the group are: " + members.substring(0, members.length() -1) + "\n");
+					} else{
+						outStream.writeObject("The owner of the group is: " + owner + "\n" +
+												"The group has no members \n");
+					}
+				}
+			}else {
+				outStream.writeObject("The group doesn't exist");
+			}
+		}
+
+		private void removeMember(String owner, String userID, String groupID) throws  IOException {
 			List<String> grupos = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
 			if(grupos.contains(groupID) && getFromDoc(groupID, "Owner").equals(owner) && !owner.equals(userID)) {
 				List<String> members = Arrays.asList(getFromDoc(groupID, "Members").split(","));
@@ -178,7 +222,6 @@ public class SeiTchizServer {
 			List<String> grupos = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
 			if(!grupos.contains(groupID)) {
 				addToDoc("Grupos", "Grupos", groupID);
-				addToDoc(user, "Grupos", groupID);
 				addToDoc(user, "Owner", groupID);
 				PrintWriter pw = new PrintWriter(groupID + ".txt");
 				pw.println("Owner:" + user);

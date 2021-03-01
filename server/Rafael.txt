@@ -1,7 +1,7 @@
 User:Rafael
 Seguidores:
-Seguindo:Ricardo,Daniel,
+Seguindo:
 Fotos:
 ID:0
-Grupos:ola,
-Owner:ola,
+Grupos:
+Owner:zezocas,
