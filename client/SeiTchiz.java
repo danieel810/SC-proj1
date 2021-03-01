@@ -173,6 +173,12 @@ public class SeiTchiz {
 			break;
 		case "c":
 		case "collect":
+			if(t.length == 2) {
+				outStream.writeObject(line);
+				System.out.println((String) inStream.readObject());
+			} else {
+				System.out.println("Executou mal o metodo");
+			}
 			break;
 		case "h":
 		case "history":

@@ -119,6 +119,7 @@ public class SeiTchizServer {
 						break;
 					case "c":
 					case "collect":
+						collect(user, line[1]);
 						break;
 					case "h":
 					case "history":
@@ -146,6 +147,92 @@ public class SeiTchizServer {
 				e1.printStackTrace();
 			}
 		}
+		
+		private void collect (String user, String groupID) throws NumberFormatException, IOException {
+	        if (!getFromDoc("Grupos", "Grupos").contains(groupID)) {
+	            outStream.writeObject(groupID + " does not exist");
+	        } else if (!getFromDoc(user, "Groups").contains(groupID) && !getFromDoc(groupID, "Owner").equals(user)) {
+	            outStream.writeObject("You are not in the group " + groupID);
+	        } else {
+	            String[] grupos = getFromDoc(user, "Grupos").split(",");
+	            int currID = 0;
+	            for (String i : grupos) {
+	                String[] g = i.split("/");
+	                if (g[0].equals(groupID)) {
+	                    currID = Integer.parseInt(g[1]);
+	                }
+	            }
+	            int lastID = Integer.parseInt(getFromDoc(groupID, "ID"));
+	            String[] chat = getChat(groupID);
+	            if (chat.length == 0) {
+	                outStream.writeObject("There are no new messages");
+	            }
+	            StringBuilder bob = new StringBuilder();
+	            for (int i = currID; i < lastID; i++) {
+	            	bob.append(chat[i] + "\n");	            	
+	            }
+				if(bob.toString().equals("")){
+					outStream.writeObject("There are no new messages");
+				} else {
+ 					outStream.writeObject(bob.toString());
+	            	changeGID(user, groupID,lastID);
+				} 
+	        }
+	    }
+		/**
+		 * 
+		 * @param user
+		 * @param groupID
+		 * @param id
+		 * @throws FileNotFoundException
+		 */
+
+	    private void changeGID(String user, String groupID, int id) throws FileNotFoundException {
+	    	Scanner sc = new Scanner(new File(user + ".txt"));
+	    	StringBuilder bob = new StringBuilder();
+	    	while(sc.hasNextLine()) {
+	    		String line = sc.nextLine();
+	    		String[] sp = line.split(":");
+	    		if(sp[0].equals("Grupos")) {
+					bob.append("Grupos:");
+	    			String[] grupos = sp[1].split(",");
+	    			for(String grupo : grupos) {
+	    				if(grupo.split("/")[0].equals(groupID)) {
+	    					bob.append(groupID + "/" + id + ",");
+	    				} else { 
+	    					bob.append(grupo + ",");
+	    				}
+	    				bob.append("\n");
+	    			}
+	    		} else {
+	    			bob.append(line + "\n");
+	    		}
+	    	}
+	    	PrintWriter pw = new PrintWriter(user + ".txt");
+	    	pw.print(bob.toString());
+	    	pw.close();
+	    	sc.close();
+		}
+
+		private String[] getChat(String groupID) throws FileNotFoundException {
+	        Scanner sc = new Scanner(new File(groupID + ".txt"));
+	        int ID = Integer.parseInt(getFromDoc(groupID, "ID"));
+	        boolean b = false;
+	        String[] msgs = new String[ID];
+	        int i = 0;
+	        while (sc.hasNextLine()) {
+	            if (b) {
+	                msgs[i] = sc.nextLine();
+	                i++;
+	            } else {
+	                if (sc.nextLine().equals("Chat:")) {
+	                    b = true;
+	                }
+	            }
+	        }
+	        sc.close();
+	        return msgs;
+	    }
 
 		private void msg(String user, String groupID, String msg) throws IOException {
 			List<String> grupos = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
@@ -201,7 +288,6 @@ public class SeiTchizServer {
 				}
 				bob.deleteCharAt(bob.length() - 1);
 				bob.append("\n");
-				//bob.append("You are member of: " + grupos.substring(0, grupos.length() -1) + "\n");
 			}
 
 			if(owner == ""){
