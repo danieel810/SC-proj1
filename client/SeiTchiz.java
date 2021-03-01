@@ -137,9 +137,21 @@ public class SeiTchiz {
 			break;
 		case "a":
 		case "addu":
+			if(t.length == 3) {
+				outStream.writeObject(line);
+				System.out.println((String) inStream.readObject());
+			} else {
+				System.out.println("Executou mal o metodo");
+			}
 			break;
 		case "r":
 		case "removeu":
+			if(t.length == 3) {
+				outStream.writeObject(line);
+				System.out.println((String) inStream.readObject());
+			} else {
+				System.out.println("Executou mal o metodo");
+			}
 			break;
 		case "g":
 		case "ginfo":

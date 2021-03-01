@@ -96,13 +96,14 @@ public class SeiTchizServer {
 					case "n":
 					case "newgroup":
 						newGroup(user, line[1]);
-						outStream.writeObject("Group created");
 						break;
 					case "a":
 					case "addu":
+						addNewMember(user, line[1], line[2]);
 						break;
 					case "r":
 					case "removeu":
+						removeMember(user, line[1], line[2]);
 						break;
 					case "g":
 					case "ginfo":
@@ -141,15 +142,57 @@ public class SeiTchizServer {
 
 		}
 
-		private void newGroup(String user, String groupID) throws FileNotFoundException {
-			addToDoc(user, "Grupos", groupID);
-			addToDoc(user, "Owner", groupID);
-			PrintWriter pw = new PrintWriter(groupID + ".txt");
-			pw.println("Owner:" + user);
-			pw.println("Members:");
-			pw.println("Chat:");
-			pw.close();
+		private void removeMember(String owner, String userID, String groupID) throws IOException {
+			List<String> grupos = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
+			if(grupos.contains(groupID) && getFromDoc(groupID, "Owner").equals(owner) && !owner.equals(userID)) {
+				List<String> members = Arrays.asList(getFromDoc(groupID, "Members").split(","));
+				if(members.contains(userID)) {
+					removeFromDoc(groupID, "Members", userID);
+					removeFromDoc(userID, "Grupos", groupID);
+					outStream.writeObject("Member removed");
+				} else {
+					outStream.writeObject("Member isn't in the group");
+				}
+			} else {
+				outStream.writeObject("This isn't the owner of the group");
+			}
 		}
+
+		private void addNewMember(String owner, String userID, String groupID) throws IOException {
+			List<String> grupos = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
+			if(grupos.contains(groupID) && getFromDoc(groupID, "Owner").equals(owner) && !owner.equals(userID)) { //TODO ver se ele ta a tentar adicionar o owner ao grupo
+				List<String> members = Arrays.asList(getFromDoc(groupID, "Members").split(","));
+				if(!members.contains(userID)) {
+					addToDoc(groupID, "Members", userID);
+					addToDoc(userID, "Grupos", groupID);
+					outStream.writeObject("Member added");
+				} else {
+					outStream.writeObject("Member is already in group");
+				}
+			} else {
+				outStream.writeObject("This isn't the owner of the group");
+			}
+		}
+
+		private void newGroup(String user, String groupID) throws IOException {
+			List<String> grupos = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
+			if(!grupos.contains(groupID)) {
+				addToDoc("Grupos", "Grupos", groupID);
+				addToDoc(user, "Grupos", groupID);
+				addToDoc(user, "Owner", groupID);
+				PrintWriter pw = new PrintWriter(groupID + ".txt");
+				pw.println("Owner:" + user);
+				pw.println("Members:");
+				pw.println("Chat:");
+				pw.close();
+				outStream.writeObject("Group created");
+			} else {
+				outStream.writeObject("Group with that name already exists");
+			}
+			
+		}
+		
+		
 
 		private void like(String user, String photoID) throws FileNotFoundException { //photoID é user:id
 			String[] profilePhoto = photoID.split(":");
