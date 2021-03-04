@@ -22,6 +22,8 @@ public class SeiTchiz {
 		Socket socket = null;
 		String[] AdressEporta = args[0].split(":");
 		Scanner sc = new Scanner(System.in);
+		String id = args[1];
+		System.out.println("User ID: " + id);
 		try {
 			String adress = AdressEporta[0];
 			int porta = Integer.parseInt(AdressEporta[1]);
@@ -33,7 +35,6 @@ public class SeiTchiz {
 			} else {
 				pw = args[2];
 			}
-			String id = args[1];
 			outStream = new ObjectOutputStream(socket.getOutputStream());
 			outStream.writeObject(id);
 			outStream.writeObject(pw);
@@ -41,11 +42,10 @@ public class SeiTchiz {
 			int autenticado = (int) inStream.readObject();
 			switch (autenticado) {
 			case 1: //User atenticado e deu certo
-				//TODO
+				System.out.println("Correct Password!");
 				break;
 			case 2: //User existe mas a pw não é essa
-				//TODO
-				System.out.println("Password Errada!");
+				System.out.println("Wrong Password!");
 				sc.close();
 				socket.close();
 				return;
@@ -54,6 +54,7 @@ public class SeiTchiz {
 				System.out.println((String)inStream.readObject());
 				String nome = sc.nextLine();
 				outStream.writeObject(nome);
+				System.out.println("User registered\n");
 				break;
 			}
 			String line = null;
@@ -109,19 +110,27 @@ public class SeiTchiz {
 			break;
 		case "p":
 		case "post":
-			outStream.writeObject(line);
-			post(line);
-			System.out.println("Saiu do post switch");
+			if(t.length == 2) {
+				outStream.writeObject(line);
+				post(line);
+			} else {
+				System.out.println("Executou mal o metodo");
+			}
 			break;
 		case "w":
 		case "wall":
-			outStream.writeObject(line);
-			wall();
+			if(t.length == 2) {
+				outStream.writeObject(line);
+				wall();
+			} else {
+				System.out.println("Executou mal o metodo");
+			}
 			break;
 		case "l":
 		case "like":
 			if(t.length == 2) {
 				outStream.writeObject(line);
+				System.out.println(inStream.readObject());
 			} else {
 				System.out.println("Executou mal o metodo");
 			}
@@ -164,7 +173,7 @@ public class SeiTchiz {
 			break;
 		case "m":
 		case "msg":
-			if(t.length == 3) {
+			if(t.length >= 3) {
 				outStream.writeObject(line);
 				System.out.println((String) inStream.readObject());
 			} else {
@@ -237,11 +246,11 @@ public class SeiTchiz {
 
 	private static void wall() throws ClassNotFoundException, IOException {
 		StringBuilder bob = new StringBuilder();
-		bob.append("Fotos: \n");
 		boolean bb = true;
 		while(bb){
 			bb = (boolean) inStream.readObject();
 			if(bb){
+				bob.append("Fotos: \n");
 				String name = (String) inStream.readObject();
 				int filesize = (int) inStream.readObject();
 				OutputStream os = new FileOutputStream("Fotos/" + name);
@@ -256,6 +265,9 @@ public class SeiTchiz {
 
 				bob.append(inStream.readObject() + "\n");
 			}	
+		}
+		if(bob.toString().equals("")) {
+			System.out.println("There aren't any photos to see");
 		}
 		System.out.println(bob.toString());
 	}
