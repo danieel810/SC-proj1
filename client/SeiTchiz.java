@@ -100,7 +100,7 @@ public class SeiTchiz {
 			break;
 		case "v":
 		case "viewfollowers":
-			if(t.length == 2) {
+			if(t.length == 1) {
 				outStream.writeObject(line);
 				System.out.println((String) inStream.readObject());
 			} else {
@@ -173,13 +173,29 @@ public class SeiTchiz {
 			break;
 		case "c":
 		case "collect":
+			if(t.length == 2) {
+				outStream.writeObject(line);
+				System.out.println((String) inStream.readObject());
+			} else {
+				System.out.println("Executou mal o metodo");
+			}
 			break;
 		case "h":
 		case "history":
+			if(t.length == 2) {
+				outStream.writeObject(line);
+				System.out.println((String) inStream.readObject());
+			} else {
+				System.out.println("Executou mal o metodo");
+			}
 			break;
-		default:
+		case "quit":
+		case "q":
 			outStream.writeObject(line);
 			System.out.println((String) inStream.readObject());
+			break;
+		default:
+			System.out.println("Metodo não existe");
 			break;
 		}
 	}
@@ -228,7 +244,7 @@ public class SeiTchiz {
 			if(bb){
 				String name = (String) inStream.readObject();
 				int filesize = (int) inStream.readObject();
-				OutputStream os = new FileOutputStream(name);
+				OutputStream os = new FileOutputStream("Fotos/" + name);
 				byte[] buffer = new byte[MEGABYTE];
 				int read = 0;
 				int remaining = filesize;
