@@ -2,17 +2,29 @@
 
 Projeto de Segurança e Confiabilidadeda Faculdade de Ciências 3 ano
 
-# Como correr
+# Como compilar
 
-TODO
+Servidor:
+
+javac src\server\SeiTchizServer.java
+
+Cliente:
+
+javac src\client\SeiTchiz.java
 
 # Testar
 
 Após o código compilado 
 
-Para correr o servidor: java SeiTchizServer.java 45678
+O jar foi criado através do eclipse
 
-Para correr o cliente: java SeiTchiz.java 127.0.0.1:45678 Daniel
+Pelo Jar:
+
+Servidor:
+java -cp bin -Djava.security.manager -Djava.security.policy=server.policy -jar SeiTchizServer.jar 45678
+
+Cliente:
+java -cp bin -Djava.security.manager -Djava.security.policy=client.policy -jar SeiTchiz.jar <IP>:<45678> <userID> <userPassword>
 
 Métodos:
 
@@ -56,7 +68,7 @@ ID:0
 Chat:
 Onde o ID é o ID da próxima mensagem
 
-Os grupos estão todos agrupados nnauma pasta grupos
+Os grupos estão todos agrupados numa pasta grupos
 
 Cada foto tem o seguinte nome: User:ID
 E estão agrupadas na pasta fotos
