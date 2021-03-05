@@ -1,0 +1,8 @@
+/* AUTOMATICALLY GENERATED ON Fri Mar 05 12:20:22 GMT 2021*/
+/* DO NOT EDIT */
+
+grant codeBase "File:bin/" {
+  permission java.io.FilePermission "<<ALL FILES>>", "read, write";
+  permission java.net.SocketPermission "127.0.0.1:45678", "connect";
+};
+

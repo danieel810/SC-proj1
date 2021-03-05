@@ -213,17 +213,22 @@ public class SeiTchiz {
 		String[] t = line.split("\\s+");
 
 		File file = new File(t[1]);
+		if(file.exists()) {
+			outStream.writeObject(true);
+			int filesize = (int) file.length();
+			outStream.writeObject(filesize);
 
-		int filesize = (int) file.length();
-		outStream.writeObject(filesize);
-
-		FileInputStream fis = new FileInputStream(file);
-		byte[] buffer = new byte[MEGABYTE];
-		while(fis.read(buffer, 0, buffer.length)> 0) {
-			outStream.write(buffer, 0, buffer.length);
+			FileInputStream fis = new FileInputStream(file);
+			byte[] buffer = new byte[MEGABYTE];
+			while(fis.read(buffer, 0, buffer.length)> 0) {
+				outStream.write(buffer, 0, buffer.length);
+			}
+			fis.close();
+			System.out.println((String) inStream.readObject());
+		} else {
+			outStream.writeObject(false);
+			System.out.println((String) inStream.readObject());
 		}
-		fis.close();
-		System.out.println((String) inStream.readObject());
 	}
 
 	private static void printOptions() {
