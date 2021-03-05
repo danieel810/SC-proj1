@@ -22,13 +22,13 @@ public class SeiTchiz {
 		Socket socket = null;
 		String[] AdressEporta = args[0].split(":");
 		Scanner sc = new Scanner(System.in);
-		String id = args[1];
+		String id = args[1]; // ID of the user
 		System.out.println("User ID: " + id);
 		try {
 			String adress = AdressEporta[0];
 			int porta = Integer.parseInt(AdressEporta[1]);
 			socket = new Socket(adress, porta);
-			String pw = null;
+			String pw = null; // Password of the user
 			if (args.length == 2)  {
 				System.out.println("Insira a sua password: ");
 				pw = sc.nextLine();
@@ -59,9 +59,9 @@ public class SeiTchiz {
 			}
 			String line = null;
 			do {
-				printOptions();
-				line = sc.nextLine();
-				pedido(line);
+				printOptions(); //Prints all the options the user can do
+				line = sc.nextLine(); 
+				pedido(line); // Process the request
 			} while(!line.equals("quit"));
 
 			socket.close();
@@ -77,9 +77,17 @@ public class SeiTchiz {
 			e.printStackTrace();
 		}
 	}
-
+	
+	/**
+	 * Processes the request of the user
+	 * @param line String with the method in the first position after a split by spaces
+	 * @throws IOException 
+	 * @throws ClassNotFoundException
+	 */
+	
 	private static void pedido(String line) throws IOException, ClassNotFoundException {
 		String[] t = line.split("\\s+");
+		//Switch with every request possible
 		switch(t[0]) {
 		case "f":
 		case "follow":
@@ -208,7 +216,14 @@ public class SeiTchiz {
 			break;
 		}
 	}
-
+	
+	/**
+	 * Sends a photo through the socket to a server
+	 * @param line line with the path to the photo
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	
 	private static void post(String line) throws IOException, ClassNotFoundException {
 		String[] t = line.split("\\s+");
 
@@ -230,6 +245,10 @@ public class SeiTchiz {
 			System.out.println((String) inStream.readObject());
 		}
 	}
+	
+	/**
+	 * Prints the options
+	 */
 
 	private static void printOptions() {
 		System.out.println("Escolha uma opção: ");
@@ -248,6 +267,13 @@ public class SeiTchiz {
 		System.out.println("history <groupID>");
 		System.out.println("quit");
 	}
+	
+	/**
+	 * Receives photos through the socket from the server
+	 * if the server have any to send
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 */
 
 	private static void wall() throws ClassNotFoundException, IOException {
 		StringBuilder bob = new StringBuilder();
