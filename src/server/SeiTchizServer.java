@@ -514,7 +514,7 @@ public class SeiTchizServer {
 		}
 		
 		/**
-		 * Likes a photo
+		 * Likes a photo 
 		 * @param user user liking the photo
 		 * @param photoID
 		 * @throws IOException
