@@ -159,9 +159,9 @@ public class SeiTchizServer {
 			try {
 				List<String> gruposAux = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
 				List<String> membersAux = Arrays.asList(getFromDoc(GRUPOS + groupID, "Members").split(","));
-				if (!gruposAux.contains(groupID)) { // Grupo não existe
+				if (!gruposAux.contains(groupID)) { // Grupo nï¿½o existe
 					outStream.writeObject(groupID + " does not exist");
-					// Caso o user não faça parte do grupo nem é o owner
+					// Caso o user nï¿½o faï¿½a parte do grupo nem ï¿½ o owner
 				} else if (!membersAux.contains(user) && !getFromDoc(GRUPOS + groupID, "Owner").equals(user)) {
 					outStream.writeObject("You are not a member of group " + groupID);
 				} else { // Tudo correu bem
@@ -189,7 +189,7 @@ public class SeiTchizServer {
 					sc.close();
 				}
 			} catch (FileNotFoundException e) {
-				System.out.println("Ficheiro não existe");
+				System.out.println("Ficheiro nï¿½o existe");
 				outStream.writeObject("Group does not exist\n");
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -578,6 +578,12 @@ public class SeiTchizServer {
 			fotos.close();
 		}
 
+		/**
+		 * Gets the number of likes of the photo with the id from user
+		 * @param user users 
+		 * @param id id of the photo
+		 * @throws IOException
+		 */
 		private void sendIDAndLikes(String user, String id) throws IOException {
 			String[] photos = getFromDoc(USERS + user, "Fotos").split(",");
 			for(String photo : photos) {
@@ -586,6 +592,13 @@ public class SeiTchizServer {
 				}
 			}
 		}
+
+		/**
+		 * Sends the photo to the client
+		 * @param user current user 
+		 * @param photo photo that will be sent
+		 * @throws IOException
+		 */
 
 		private void sendPhoto(String user, String photo) throws IOException {
 			File file = new File(FOTOS + user + ";" + photo + ".jpg");
@@ -600,6 +613,13 @@ public class SeiTchizServer {
 			}
 			is.close();
 		}
+
+		/**
+		 * Gets the information with the requested tag from the file docName
+		 * @param docName name of the file 
+		 * @param tag requested tag
+		 * @throws FileNotFoundException
+		 */
 
 		private String getFromDoc(String docName, String tag) throws FileNotFoundException {
 			Scanner sc = new Scanner(new File(docName + ".txt"));
@@ -616,6 +636,13 @@ public class SeiTchizServer {
 			sc.close();
 			return "";
 		}
+
+		/**
+		 * Posts the photo the current user requested to post
+		 * @param user current user 
+		 * @throws ClassNotFoundException
+		 * @throws IOException
+		 */
 
 		private void post(String user) throws ClassNotFoundException, IOException {
 			int id = Integer.parseInt(getFromDoc(USERS + user, "ID"));
@@ -636,6 +663,12 @@ public class SeiTchizServer {
 
 		}
 
+		/**
+		 * Updates the ID from the next photo
+		 * @param user user to be updated
+		 * @param id new id
+		 * @throws FileNotFoundException
+		 */
 		private void changeID(String user, int id) throws FileNotFoundException {
 			Scanner sc = new Scanner(new File(user + ".txt"));
 			StringBuilder bob = new StringBuilder();
@@ -654,6 +687,13 @@ public class SeiTchizServer {
 			sc.close();
 		}
 
+		/**
+		 * Saves the image in the server under the users profile
+		 * @param user current user
+		 * @param id id of the photo
+		 * @throws FileNotFoundException
+		 * @throws IOException
+		 */
 		private void saveImage(String user, int id) throws ClassNotFoundException, IOException {          
 			int filesize = (int) inStream.readObject();	
 			FileOutputStream fos = new FileOutputStream(FOTOS + user + ";" + id + ".jpg");
@@ -668,6 +708,11 @@ public class SeiTchizServer {
 			fos.close();
 		}
 
+		/**
+		 * Shows the current user his followers
+		 * @param user current user
+		 * @throws IOException
+		 */
 		private void viewFollowers(String user) throws IOException{
 			Scanner sc = new Scanner(new File(USERS + user+ ".txt"));
 			while(sc.hasNextLine()) {
@@ -685,6 +730,12 @@ public class SeiTchizServer {
 			sc.close();
 		}
 
+		/**
+		 * Unfollows the requested profile
+		 * @param user current user
+		 * @param userASeguir user to unfollow
+		 * @throws IOException
+		 */
 		private void unfollow(String user, String userASeguir) throws IOException {
 			if(users.get(userASeguir) != null) { //Caso o userASeguir exista
 				if(seguir(user, userASeguir)) {
@@ -699,6 +750,12 @@ public class SeiTchizServer {
 			}
 		}
 
+		/**
+		 * Follows the requested profile
+		 * @param user current user
+		 * @param userASeguir user to follow
+		 * @throws IOException
+		 */
 		private void follow(String user, String userASeguir) throws IOException {
 			if(users.get(userASeguir) != null) { //Caso o userASeguir exista
 				if(!seguir(user, userASeguir)) {
@@ -713,6 +770,13 @@ public class SeiTchizServer {
 			}
 		}
 
+		/**
+		 * Returns true if user follows userASeguir
+		 * @param user user
+		 * @param userASeguir userASeguir
+		 * @return True if user follows userASeguir, false if not
+		 * @throws IOException
+		 */
 		private boolean seguir(String user, String userASeguir) throws FileNotFoundException {
 			Scanner sc = new Scanner(new File(USERS + userASeguir + ".txt"));
 			while(sc.hasNextLine()) {
@@ -729,6 +793,13 @@ public class SeiTchizServer {
 			return false;
 		}
 
+		/**
+		 * Removes the info from a certain tag from the file docName
+		 * @param docName name of the file
+		 * @param tag tag that will be edited
+		 * @param info info that will be removed
+		 * @throws FileNotFoundException
+		 */
 		private void removeFromDoc (String docName, String tag, String info) throws FileNotFoundException{
 			File doc = new File(docName + ".txt");
 			Scanner sc = new Scanner (doc);
@@ -754,6 +825,13 @@ public class SeiTchizServer {
 			pt.close();
 		}
 
+		/**
+		 * Adds the info to a certain tag to the file docName
+		 * @param docName name of the file
+		 * @param tag tag that will be edited
+		 * @param info info that will be added
+		 * @throws FileNotFoundException
+		 */
 		private void addToDoc (String docName, String tag, String info) throws FileNotFoundException{
 			File doc = new File(docName + ".txt");
 			Scanner sc = new Scanner (doc);
@@ -782,9 +860,16 @@ public class SeiTchizServer {
 			pt.close();
 		}
 
-		private void registaUser(String user, String passwd, String nome) throws FileNotFoundException {
+		/**
+		 * Registers a new user
+		 * @param user new user id
+		 * @param passwd new user password
+		 * @param name new user name
+		 * @throws FileNotFoundException
+		 */
+		private void registaUser(String user, String passwd, String name) throws FileNotFoundException {
 			ArrayList<String> list = new ArrayList<>();
-			list.add(nome);
+			list.add(name);
 			list.add(passwd);
 			users.put(user, list);
 			PrintWriter pw = new PrintWriter(FILE);
@@ -841,6 +926,7 @@ public class SeiTchizServer {
 		//sSoc.close();
 	}
 
+	
 	private void criaPastas() {
 		for(File pasta : pastas) {
 			if(!pasta.exists()) {
@@ -849,6 +935,10 @@ public class SeiTchizServer {
 		}
 	}
 
+	/**
+	 * Load the users from our file
+	 * @throws FileNotFoundException
+	 */
 	private void loadUsers() throws FileNotFoundException {
 		Scanner sc = new Scanner(new File(FILE));
 		while(sc.hasNextLine()) {
