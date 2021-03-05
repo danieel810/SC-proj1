@@ -19,8 +19,12 @@ import java.util.Scanner;
 
 public class SeiTchizServer {
 
-	private final static String FILE = "Users.txt";
+	private final String FILE = "Users.txt";
+	private final String GRUPOS = "Grupos/";
+	private final String FOTOS = "Fotos/";
+	private final String USERS = "Users/";
 	private HashMap<String, ArrayList<String>> users = new HashMap<>();
+	private final File[] pastas = {new File("Fotos"), new File("Grupos"), new File("Users")};
 
 	class ServerThread implements Runnable{
 
@@ -43,7 +47,7 @@ public class SeiTchizServer {
 
 				user = (String) inStream.readObject();
 				passwd = (String)inStream.readObject();
-				System.out.println("thread: depois de receber a password e o user");
+				System.out.println("Received user and password");
 
 				if(users.get(user) != null) {
 					String pw = users.get(user).get(1); // Tudo deu certo;
@@ -135,40 +139,46 @@ public class SeiTchizServer {
 				inStream.close();
 				socket.close();
 
-			} catch (ArrayIndexOutOfBoundsException e) {
-				// Avisar que o stor Ã© mongo
-			} catch(FileNotFoundException e){
-				
-			}
-			catch(IOException e) {
+			} catch(IOException e) {
 				e.printStackTrace();				
-			} catch (ClassNotFoundException e1) {
-				e1.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
 			}
 		}
+		
+		/**
+		 * Returns all messages read by this user
+		 * if group doesn't exist a message is sent
+		 * if user isn't part of that group a message is sent
+		 * @param user user logged in
+		 * @param groupID gets the all messages from this group
+		 * @throws IOException 
+		 */
 
-		private void history(String user, String groupID) {
+		private void history(String user, String groupID) throws IOException {
 			try {
 				List<String> gruposAux = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
-				List<String> membersAux = Arrays.asList(getFromDoc("Grupos/" + groupID, "Members").split(","));
-				if (!gruposAux.contains(groupID)) {
+				List<String> membersAux = Arrays.asList(getFromDoc(GRUPOS + groupID, "Members").split(","));
+				if (!gruposAux.contains(groupID)) { // Grupo não existe
 					outStream.writeObject(groupID + " does not exist");
-				} else if (!membersAux.contains(user) && !getFromDoc("Grupos/" + groupID, "Owner").equals(user)) {
+					// Caso o user não faça parte do grupo nem é o owner
+				} else if (!membersAux.contains(user) && !getFromDoc(GRUPOS + groupID, "Owner").equals(user)) {
 					outStream.writeObject("You are not a member of group " + groupID);
-				} else {
-					String[] grupos = getFromDoc("Users/" + user, "Grupos").split(",");
-					int id = 0;
+				} else { // Tudo correu bem
+					String[] grupos = getFromDoc(USERS + user, "Grupos").split(",");
+					int idHistory = 0;
+					int idCollect = 0;
 					for(String grupo : grupos) {
 						String[] info = grupo.split("/");
 						if (info[0].equals(groupID)) {
-							id = Integer.parseInt(info[2]);
+							idCollect = Integer.parseInt(info[1]); // Vai buscar o ID da ultima mesagem que ele leu
+							idHistory = Integer.parseInt(info[2]); // Vai buscar o ID de quando ele entrou para o grupo
 						}
 					}
-
-					Scanner sc = new Scanner(new File("Users/" + user + ".txt"));
+					Scanner sc = new Scanner(new File(USERS + user + ".txt"));
 					StringBuilder bob = new StringBuilder();
-					String[] chat = getChat(groupID);
-					for (int i = id; i < chat.length; i++) {
+					String[] chat = getChat(groupID); // Vai buscar todo o chat do grupo
+					for (int i = idHistory; i < idCollect; i++) {
 						bob.append(chat[i] + "\n");
 					}
 					if(bob.toString().equals("")) {
@@ -180,33 +190,39 @@ public class SeiTchizServer {
 				}
 			} catch (FileNotFoundException e) {
 				System.out.println("Ficheiro não existe");
-				try {
-					outStream.writeObject("Group does not exist\n");
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
+				outStream.writeObject("Group does not exist\n");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 
 		}
+		
+		/**
+		 * Gets all the messages from that group that haven't been collected yet
+		 * if group doesn't exist a message is sent
+		 * if user isn't part of that group a message is sent
+		 * @param user user to collect the messages
+		 * @param groupID group to collect the messages
+		 * @throws IOException
+		 */
 
-		private void collect (String user, String groupID) throws NumberFormatException, IOException {
-			if (!getFromDoc("Grupos", "Grupos").contains(groupID)) {
+		private void collect (String user, String groupID) throws IOException {
+			if (!getFromDoc("Grupos", "Grupos").contains(groupID)) { // Verifica se o grupo existe
 				outStream.writeObject(groupID + " does not exist\n");
-			} else if (!getFromDoc("Users/" + user, "Grupos").contains(groupID) && 
-					!getFromDoc("Grupos/" + groupID, "Owner").equals(user)) {
+			} else if (!getFromDoc(USERS + user, "Grupos").contains(groupID) && 
+					// Verifica se o user faz parte do grupo, como owner ou membro
+					!getFromDoc(GRUPOS + groupID, "Owner").equals(user)) { 
 				outStream.writeObject("You are not in the group " + groupID);
 			} else {
-				String[] grupos = getFromDoc("Users/" + user, "Grupos").split(",");
+				String[] grupos = getFromDoc(USERS + user, "Grupos").split(","); //Vai buscar todos os grupos do user
 				int currID = 0;
 				for (String i : grupos) {
 					String[] g = i.split("/");
 					if (g[0].equals(groupID)) {
-						currID = Integer.parseInt(g[1]);
+						currID = Integer.parseInt(g[1]); 
 					}
 				}
-				int lastID = Integer.parseInt(getFromDoc("Grupos/" + groupID, "ID"));
+				int lastID = Integer.parseInt(getFromDoc(GRUPOS + groupID, "ID"));
 				String[] chat = getChat(groupID);
 				if (chat.length == 0) {
 					outStream.writeObject("Chat doesn't contain any message\n");
@@ -224,15 +240,15 @@ public class SeiTchizServer {
 			}
 		}
 		/**
-		 * 
-		 * @param user
-		 * @param groupID
-		 * @param id
+		 * Changes the ID of the group in a user
+		 * @param user user logged in
+		 * @param groupID group chosen
+		 * @param id id to change to
 		 * @throws FileNotFoundException
 		 */
 
 		private void changeGID(String user, String groupID, int id) throws FileNotFoundException {
-			Scanner sc = new Scanner(new File("Users/" + user + ".txt"));
+			Scanner sc = new Scanner(new File(USERS + user + ".txt"));
 			StringBuilder bob = new StringBuilder();
 			while(sc.hasNextLine()) {
 				String line = sc.nextLine();
@@ -253,15 +269,22 @@ public class SeiTchizServer {
 					bob.append(line + "\n");
 				}
 			}
-			PrintWriter pw = new PrintWriter("Users/" + user + ".txt");
+			PrintWriter pw = new PrintWriter(USERS + user + ".txt");
 			pw.print(bob.toString());
 			pw.close();
 			sc.close();
 		}
+		
+		/**
+		 * Gets the chat of a group
+		 * @param groupID group the get the chat from
+		 * @return all the messages sent to that group
+		 * @throws FileNotFoundException
+		 */
 
 		private String[] getChat(String groupID) throws FileNotFoundException {
-			Scanner sc = new Scanner(new File("Grupos/" + groupID + ".txt"));
-			int ID = Integer.parseInt(getFromDoc("Grupos/" + groupID, "ID"));
+			Scanner sc = new Scanner(new File(GRUPOS + groupID + ".txt"));
+			int ID = Integer.parseInt(getFromDoc(GRUPOS + groupID, "ID"));
 			boolean b = false;
 			String[] msgs = new String[ID];
 			int i = 0;
@@ -278,15 +301,25 @@ public class SeiTchizServer {
 			sc.close();
 			return msgs;
 		}
+		
+		/**
+		 * Sends a message to a group
+		 * if group doesn't exist a message is sent
+		 * if user isn't part of that group a message is sent
+		 * @param user user sending the message
+		 * @param groupID group the message is sent to
+		 * @param msg message sent to a group
+		 * @throws IOException
+		 */
 
 		private void msg(String user, String groupID, String msg) throws IOException {
 			List<String> grupos = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
 			if(grupos.contains(groupID)) {
-				List<String> members = Arrays.asList(getFromDoc("Grupos/" + groupID, "Members").split(","));
-				if(members.contains(user) || getFromDoc("Grupos/" + groupID, "Owner").equals(user)) {
-					int id = Integer.parseInt(getFromDoc("Grupos/" + groupID, "ID"));
+				List<String> members = Arrays.asList(getFromDoc(GRUPOS + groupID, "Members").split(","));
+				if(members.contains(user) || getFromDoc(GRUPOS + groupID, "Owner").equals(user)) {
+					int id = Integer.parseInt(getFromDoc(GRUPOS + groupID, "ID"));
 					id++;
-					changeID("Grupos/" + groupID, id);
+					changeID(GRUPOS + groupID, id);
 					newMessage(groupID, "Chat", msg);
 					outStream.writeObject("Message received!\n");					
 				} else {
@@ -296,9 +329,17 @@ public class SeiTchizServer {
 				outStream.writeObject("Group does not exist!\n");
 			}
 		}
+		
+		/**
+		 * Add the message to the chat in a group
+		 * @param groupID group the message is added to
+		 * @param tag tag to add to (Always = Chat)
+		 * @param info message to be added
+		 * @throws FileNotFoundException
+		 */
 
 		private void newMessage(String groupID, String tag, String info) throws FileNotFoundException{
-			Scanner sc = new Scanner(new File("Grupos/" + groupID + ".txt"));
+			Scanner sc = new Scanner(new File(GRUPOS + groupID + ".txt"));
 			StringBuilder bob = new StringBuilder();
 			while(sc.hasNextLine()) {
 				String line = sc.nextLine();
@@ -314,14 +355,21 @@ public class SeiTchizServer {
 				}
 			}
 			sc.close();
-			PrintWriter pw = new PrintWriter("Grupos/" + groupID + ".txt");
+			PrintWriter pw = new PrintWriter(GRUPOS + groupID + ".txt");
 			pw.print(bob.toString());
 			pw.close();
 		}
-
+		
+		/**
+		 * Gets all the info about the groups of the user logged in
+		 * @param user user logged in
+		 * @throws FileNotFoundException
+		 * @throws IOException
+		 */
+		
 		private void ginfo(String user) throws FileNotFoundException, IOException {
-			String grupos = getFromDoc("Users/" + user, "Grupos");
-			String owner = getFromDoc("Users/" + user, "Owner");
+			String grupos = getFromDoc(USERS + user, "Grupos");
+			String owner = getFromDoc(USERS + user, "Owner");
 			StringBuilder bob = new StringBuilder();
 			if(grupos == ""){
 				bob.append("You aren't a member of any group" + "\n");
@@ -342,16 +390,26 @@ public class SeiTchizServer {
 			}
 			outStream.writeObject(bob.toString());
 		}
+		
+		/**
+		 * Gets all the info about the group given
+		 * if group doesn't exist a message is sent
+		 * if user isn't part of that group a message is sent
+		 * @param user
+		 * @param groupID
+		 * @throws FileNotFoundException
+		 * @throws IOException
+		 */
 
 		private void ginfo(String user, String groupID) throws FileNotFoundException, IOException{
-			File grupo = new File("Grupos/" + groupID + ".txt");
+			File grupo = new File(GRUPOS + groupID + ".txt");
 			if(grupo.exists()){
-				String owner = getFromDoc("Grupos/" + groupID, "Owner");
-				List<String> m = Arrays.asList(getFromDoc("Grupos/" + groupID, "Members").split(","));
+				String owner = getFromDoc(GRUPOS + groupID, "Owner");
+				List<String> m = Arrays.asList(getFromDoc(GRUPOS + groupID, "Members").split(","));
 				if(!user.equals(owner) && !m.contains(user)){
-					outStream.writeObject("You aren't the owner of the group\n");
+					outStream.writeObject("You don't belong to this group\n");
 				} else {
-					String members = getFromDoc("Grupos/" + groupID, "Members");
+					String members = getFromDoc(GRUPOS + groupID, "Members");
 					if(members != ""){
 						outStream.writeObject("The owner of the group is: " + owner + "\n" +
 								"The members of the group are: " + members.substring(0, members.length() -1) + "\n");
@@ -364,13 +422,24 @@ public class SeiTchizServer {
 				outStream.writeObject("The group doesn't exist\n");
 			}
 		}
+		
+		/**
+		 * Removes a member from a group
+		 * if group doesn't exist a message is sent
+		 * if user isn't part of that group a message is sent
+		 * also can't remove the owner of the group
+		 * @param owner owner of the group
+		 * @param userID user to be removed from the group
+		 * @param groupID group to be removed from
+		 * @throws IOException
+		 */
 
 		private void removeMember(String owner, String userID, String groupID) throws  IOException {
 			List<String> grupos = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
-			if(grupos.contains(groupID) && getFromDoc("Grupos/" + groupID, "Owner").equals(owner) && !owner.equals(userID)) {
-				List<String> members = Arrays.asList(getFromDoc("Grupos/" + groupID, "Members").split(","));
+			if(grupos.contains(groupID) && getFromDoc(GRUPOS + groupID, "Owner").equals(owner) && !owner.equals(userID)) {
+				List<String> members = Arrays.asList(getFromDoc(GRUPOS + groupID, "Members").split(","));
 				if(members.contains(userID)) {
-					String[] gru = getFromDoc("Users/" + userID, "Grupos").split(",");
+					String[] gru = getFromDoc(USERS + userID, "Grupos").split(",");
 					int currID = 0;
 					for (String i : gru) {
 						String[] g = i.split("/");
@@ -378,8 +447,8 @@ public class SeiTchizServer {
 							currID = Integer.parseInt(g[1]);
 						}
 					}
-					removeFromDoc("Grupos/" + groupID, "Members", userID);
-					removeFromDoc("Users/" + userID, "Grupos", groupID + "/" + currID);
+					removeFromDoc(GRUPOS + groupID, "Members", userID);
+					removeFromDoc(USERS + userID, "Grupos", groupID + "/" + currID);
 					outStream.writeObject("Member removed\n");
 				} else {
 					outStream.writeObject("Member isn't in the group\n");
@@ -388,15 +457,26 @@ public class SeiTchizServer {
 				outStream.writeObject("This isn't the owner of the group or group does not exist or you are trying to remove yourself\\n");
 			}
 		}
+		
+		/**
+		 * Adds a member from a group
+		 * if group doesn't exist a message is sent
+		 * if user isn't part of that group a message is sent
+		 * also can't add himself to the group
+		 * @param owner owner of the group
+		 * @param userID user to be added to the group
+		 * @param groupID group to be added to
+		 * @throws IOException
+		 */
 
 		private void addNewMember(String owner, String userID, String groupID) throws IOException {
 			List<String> grupos = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
-			if(grupos.contains(groupID) && getFromDoc("Grupos/" + groupID, "Owner").equals(owner) && !owner.equals(userID)) {
-				List<String> members = Arrays.asList(getFromDoc("Grupos/" + groupID, "Members").split(","));
+			if(grupos.contains(groupID) && getFromDoc(GRUPOS + groupID, "Owner").equals(owner) && !owner.equals(userID)) {
+				List<String> members = Arrays.asList(getFromDoc(GRUPOS + groupID, "Members").split(","));
 				if(!members.contains(userID)) {
-					int gID = Integer.parseInt(getFromDoc("Grupos/" + groupID, "ID"));
-					addToDoc("Grupos/" + groupID, "Members", userID);
-					addToDoc("Users/" + userID, "Grupos", groupID + "/" +  gID + "/" + gID);
+					int gID = Integer.parseInt(getFromDoc(GRUPOS + groupID, "ID"));
+					addToDoc(GRUPOS + groupID, "Members", userID);
+					addToDoc(USERS + userID, "Grupos", groupID + "/" +  gID + "/" + gID);
 					outStream.writeObject("Member added\n");
 				} else {
 					outStream.writeObject("Member is already in group\n");
@@ -405,14 +485,22 @@ public class SeiTchizServer {
 				outStream.writeObject("This isn't the owner of the group or group does not exist or you are trying to add yourself\n");
 			}
 		}
+		
+		/**
+		 * Creates a new group
+		 * Sends a message if the groupID already exists
+		 * @param user user logged in and the owner of the group
+		 * @param groupID ID of the new group
+		 * @throws IOException
+		 */
 
 		private void newGroup(String user, String groupID) throws IOException {
 			List<String> grupos = Arrays.asList(getFromDoc("Grupos", "Grupos").split(","));
 			if(!grupos.contains(groupID)) {
 				addToDoc("Grupos", "Grupos", groupID);
-				addToDoc("Users/" + user, "Grupos", groupID + "/0/0");
-				addToDoc("Users/" + user, "Owner", groupID);
-				PrintWriter pw = new PrintWriter("Grupos/" + groupID + ".txt");
+				addToDoc(USERS + user, "Grupos", groupID + "/0/0");
+				addToDoc(USERS + user, "Owner", groupID);
+				PrintWriter pw = new PrintWriter(GRUPOS + groupID + ".txt");
 				pw.println("Owner:" + user);
 				pw.println("Members:");
 				pw.println("ID:0");
@@ -424,18 +512,26 @@ public class SeiTchizServer {
 			}
 
 		}
+		
+		/**
+		 * Likes a photo
+		 * @param user user liking the photo
+		 * @param photoID
+		 * @throws IOException
+		 * @requires photoID has to be like User:PhotoID
+		 */
 
 		private void like(String user, String photoID) throws IOException { //photoID Ã© user:id
 			String[] profilePhoto = photoID.split(":");
-			if(verifyID(profilePhoto)) {
+			if(verifyUser(profilePhoto)) {
 				boolean b = false;
-				String[] photos = getFromDoc("Users/" + profilePhoto[0], "Fotos").split(",");
+				String[] photos = getFromDoc(USERS + profilePhoto[0], "Fotos").split(",");
 				for(String photo : photos) {
 					if(photo.split("/")[0].equals(profilePhoto[1])) {
-						removeFromDoc("Users/" + profilePhoto[0], "Fotos", photo);
+						removeFromDoc(USERS + profilePhoto[0], "Fotos", photo);
 						int likes = Integer.parseInt(photo.split("/")[1]) + 1;
 						String newInfo = photo.split("/")[0] + "/" + likes;
-						addToDoc("Users/" + profilePhoto[0], "Fotos", newInfo);
+						addToDoc(USERS + profilePhoto[0], "Fotos", newInfo);
 						b = true;
 					}
 				}
@@ -449,12 +545,12 @@ public class SeiTchizServer {
 			}	
 		}
 
-		private boolean verifyID(String[] profilePhoto) {
+		private boolean verifyUser(String[] profilePhoto) {
 			return users.get(profilePhoto[0]) != null;
 		}
 
 		private void wall(String user, int nfotos) throws IOException {
-			List<String> seguindo = Arrays.asList(getFromDoc("Users/" + user, "Seguindo").split(","));
+			List<String> seguindo = Arrays.asList(getFromDoc(USERS + user, "Seguindo").split(","));
 			Scanner fotos = new Scanner(new File("Fotos.txt"));
 			while(fotos.hasNextLine()) {
 				String[] t = fotos.nextLine().split(":");
@@ -470,7 +566,7 @@ public class SeiTchizServer {
 		}
 
 		private void sendIDAndLikes(String user, String id) throws IOException {
-			String[] photos = getFromDoc("Users/" + user, "Fotos").split(",");
+			String[] photos = getFromDoc(USERS + user, "Fotos").split(",");
 			for(String photo : photos) {
 				if(photo.split("/")[0].equals(id)) {
 					outStream.writeObject(user + ": (id/likes) " + photo);
@@ -479,7 +575,7 @@ public class SeiTchizServer {
 		}
 
 		private void sendPhoto(String user, String photo) throws IOException {
-			File file = new File("Fotos/" + user + ";" + photo + ".jpg");
+			File file = new File(FOTOS + user + ";" + photo + ".jpg");
 			InputStream is = new FileInputStream(file);
 			byte[] buffer = new byte[MEGABYTE];
 			int length = 0;
@@ -509,14 +605,14 @@ public class SeiTchizServer {
 		}
 
 		private void post(String user) throws ClassNotFoundException, IOException {
-			int id = Integer.parseInt(getFromDoc("Users/" + user, "ID"));
+			int id = Integer.parseInt(getFromDoc(USERS + user, "ID"));
 			id++;
 			boolean b = (boolean) inStream.readObject();
 			if(b) {
 				saveImage(user, id);
-				addToDoc("Users/" + user, "Fotos", String.valueOf(id) + "/0");
+				addToDoc(USERS + user, "Fotos", String.valueOf(id) + "/0");
 				addToDoc("Fotos", null, user + ":" + id);
-				changeID("Users/" + user, id);
+				changeID(USERS + user, id);
 
 				outStream.writeObject("Photo added\n");
 				outStream.flush();
@@ -524,7 +620,7 @@ public class SeiTchizServer {
 			} else {
 				outStream.writeObject("Photo does not exists!\n");
 			}
-			
+
 		}
 
 		private void changeID(String user, int id) throws FileNotFoundException {
@@ -547,7 +643,7 @@ public class SeiTchizServer {
 
 		private void saveImage(String user, int id) throws ClassNotFoundException, IOException {          
 			int filesize = (int) inStream.readObject();	
-			FileOutputStream fos = new FileOutputStream("Fotos/" + user + ";" + id + ".jpg");
+			FileOutputStream fos = new FileOutputStream(FOTOS + user + ";" + id + ".jpg");
 
 			byte[] buffer = new byte[MEGABYTE];
 			int read = 0;
@@ -560,7 +656,7 @@ public class SeiTchizServer {
 		}
 
 		private void viewFollowers(String user) throws IOException{
-			Scanner sc = new Scanner(new File("Users/" + user+ ".txt"));
+			Scanner sc = new Scanner(new File(USERS + user+ ".txt"));
 			while(sc.hasNextLine()) {
 				String line = sc.nextLine();
 				String[] sp = line.split(":");
@@ -579,8 +675,8 @@ public class SeiTchizServer {
 		private void unfollow(String user, String userASeguir) throws IOException {
 			if(users.get(userASeguir) != null) { //Caso o userASeguir exista
 				if(seguir(user, userASeguir)) {
-					removeFromDoc("Users/" + userASeguir, "Seguidores", user);
-					removeFromDoc("Users/" + user, "Seguindo", userASeguir);
+					removeFromDoc(USERS + userASeguir, "Seguidores", user);
+					removeFromDoc(USERS + user, "Seguindo", userASeguir);
 					outStream.writeObject("User unfollowed\n");
 				} else {
 					outStream.writeObject("User isn't being followed\n");
@@ -593,8 +689,8 @@ public class SeiTchizServer {
 		private void follow(String user, String userASeguir) throws IOException {
 			if(users.get(userASeguir) != null) { //Caso o userASeguir exista
 				if(!seguir(user, userASeguir)) {
-					addToDoc("Users/" + userASeguir, "Seguidores", user);
-					addToDoc("Users/" + user, "Seguindo", userASeguir);
+					addToDoc(USERS + userASeguir, "Seguidores", user);
+					addToDoc(USERS + user, "Seguindo", userASeguir);
 					outStream.writeObject("User followed\n");
 				} else {
 					outStream.writeObject("User is already being followed\n");
@@ -605,7 +701,7 @@ public class SeiTchizServer {
 		}
 
 		private boolean seguir(String user, String userASeguir) throws FileNotFoundException {
-			Scanner sc = new Scanner(new File("Users/" + userASeguir + ".txt"));
+			Scanner sc = new Scanner(new File(USERS + userASeguir + ".txt"));
 			while(sc.hasNextLine()) {
 				String line = sc.nextLine();
 				String[] sp = line.split(":");
@@ -691,7 +787,7 @@ public class SeiTchizServer {
 				pw.println();
 			}
 			pw.close();
-			PrintWriter t = new PrintWriter("Users/" + user + ".txt");
+			PrintWriter t = new PrintWriter(USERS + user + ".txt");
 			t.println("User:" + user);
 			t.println("Seguidores:");
 			t.println("Seguindo:");
@@ -714,6 +810,7 @@ public class SeiTchizServer {
 		ServerSocket sSoc = null;
 		try {
 			loadUsers();
+			criaPastas();
 			sSoc = new ServerSocket(port);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -729,6 +826,14 @@ public class SeiTchizServer {
 			}
 		}
 		//sSoc.close();
+	}
+
+	private void criaPastas() {
+		for(File pasta : pastas) {
+			if(!pasta.exists()) {
+				pasta.mkdir();
+			}
+		}
 	}
 
 	private void loadUsers() throws FileNotFoundException {
