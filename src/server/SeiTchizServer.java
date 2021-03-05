@@ -523,7 +523,7 @@ public class SeiTchizServer {
 
 		private void like(String user, String photoID) throws IOException { //photoID é user:id
 			String[] profilePhoto = photoID.split(":");
-			if(verifyUser(profilePhoto)) {
+			if(verifyUser(profilePhoto[0])) {
 				boolean b = false;
 				String[] photos = getFromDoc(USERS + profilePhoto[0], "Fotos").split(",");
 				for(String photo : photos) {
@@ -544,10 +544,23 @@ public class SeiTchizServer {
 				outStream.writeObject("User does not exist!\n");
 			}	
 		}
+		
+		/**
+		 * Verifies if the user exists
+		 * @param user user to be verified
+		 * @return true if exists
+		 */
 
-		private boolean verifyUser(String[] profilePhoto) {
-			return users.get(profilePhoto[0]) != null;
+		private boolean verifyUser(String user) {
+			return users.get(user) != null;
 		}
+		
+		/**
+		 * Sends the last n photos of the users being followed (in total)
+		 * @param user user logged in
+		 * @param nfotos number of photos
+		 * @throws IOException
+		 */
 
 		private void wall(String user, int nfotos) throws IOException {
 			List<String> seguindo = Arrays.asList(getFromDoc(USERS + user, "Seguindo").split(","));
