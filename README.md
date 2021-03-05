@@ -72,3 +72,14 @@ Os grupos estão todos agrupados numa pasta grupos
 
 Cada foto tem o seguinte nome: User:ID
 E estão agrupadas na pasta fotos
+
+Relativamente aos ficheiros policy:
+
+Cliente:
+
+
+dá permissões ao jar e ao que está na pasta bin para ler e escrever em todos os ficheiros e connectar se a um ip:porta especifico
+
+Servidor:
+
+dá permissões ao jar e ao que está na pasta bin para ler e escrever em todos os ficheiros e connectar se a um ip:porta a porta tem de ser no minimo 1024
