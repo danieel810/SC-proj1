@@ -45,9 +45,9 @@ Fotos:
 ID:0
 Grupos:ola/0/0,
 Owner:ola,
-o ID é o ID da foto atual, quando for posta uma novo foto fica com ID 1 e o ID incrementa
+o ID é o ID da foto mais recente, quando for posta uma novo foto o ID é incrementado e a foto fica com esse ID
 Na secção dos grupos, cada grupo tem um nome (ola) o ID da ultima mensagem que deu collect e o ID da mensagem de quando entrou no grupo
-Os users estão todos agrupados numa pasta users
+Os users estão todos agrupados na pasta users
 
 Um ficheiro para cada grupo que tem a seguinte informação
 Owner:Daniel
@@ -56,7 +56,7 @@ ID:0
 Chat:
 Onde o ID é o ID da próxima mensagem
 
-Os grupos estão todos agrupados numa pasta grupos
+Os grupos estão todos agrupados nnauma pasta grupos
 
 Cada foto tem o seguinte nome: User:ID
-E estão agrupadas numa posta fotos
+E estão agrupadas na pasta fotos
